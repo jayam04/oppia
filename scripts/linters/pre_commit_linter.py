@@ -619,6 +619,7 @@ def main(args: Optional[List[str]] = None) -> None:
     """Main method for pre commit linter script that lints Python, JavaScript,
     HTML, and CSS files.
     """
+    print(sys.argv)
     # Namespace is used to share values between multiple processes. This cannot
     # be used as a global variable since then it leads to hanging of some
     # processes.

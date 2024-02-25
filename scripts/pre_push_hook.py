@@ -16,7 +16,7 @@
 
 """Pre-push hook that executes the Python/JS linters on all files that
 deviate from develop.
-(By providing the list of files to `scripts.linters.pre_commit_linter`)
+(By providing the list of files to `scripts.linters.e`)
 To install the hook manually simply execute this script from the oppia root dir
 with the `--install` flag.
 To bypass the validation upon `git push` use the following command:
