@@ -64,7 +64,7 @@ LINTER_FILE_FLAG: Final = '--files'
 
 # Path to currently running python interpreter,
 # it is required to resolve python version conflict in docker.
-PYTHON_CMD: Final = sys.executable if feconf.OPPIA_IS_DOCKERIZED else 'python'
+PYTHON_CMD: Final = 'python'
 
 OPPIA_PARENT_DIR: Final = os.path.join(
     FILE_DIR, os.pardir, os.pardir, os.pardir
