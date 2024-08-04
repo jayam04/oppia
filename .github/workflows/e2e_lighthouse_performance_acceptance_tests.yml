@@ -12,8 +12,45 @@ on:
       - release-*
 
 jobs:
+  build:
+    runs-on: ubuntu-22.04
+    name: Build Docker Containers
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8.15'
+          architecture: 'x64'
+      - uses: ./.github/actions/merge
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - uses: ./.github/actions/install-chrome
+      - name: Install ffmpeg
+        run: sudo apt install ffmpeg
+      - name: Initializing Containers
+        run: |
+          make build
+          # This is required as E2E tests are run on the host machine and not in the docker container.
+          docker compose up angular-build -d
+          sudo docker cp oppia-angular-build:/app/oppia/node_modules .
+      - name: Save Docker Containers
+        run: |
+          mkdir -p /tmp/docker_images
+          services=$(docker-compose config --services)
+          for service in $services; do
+            image_id=$(docker-compose images -q $service)
+            docker save -o /tmp/docker_images/${service}.tar $image_id
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-images
+          path: /tmp/docker_images/*.tar
   e2e_test:
-    runs-on:  ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -67,25 +104,16 @@ jobs:
           - name: wipeout
     name: e2e_test (${{ matrix.os }}, ${{ matrix.suite.name }})
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Download Docker Images Artifact
+        uses: actions/download-artifact@v3
         with:
-          python-version: '3.8.15'
-          architecture: 'x64'
-      - uses: ./.github/actions/merge
-      - name: Free disk space
+          name: docker-images
+
+      - name: Load Docker Images
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY" 
-      - uses: ./.github/actions/install-chrome
-      - name: Install ffmpeg
-        run: sudo apt install ffmpeg
-      - name: Initializing Containers
-        run: |
-          make build
-          # This is required as E2E tests are run on the host machine and not in the docker container.
-          docker compose up angular-build -d
-          sudo docker cp oppia-angular-build:/app/oppia/node_modules .
+          for tar_file in docker_images/*.tar; do
+            docker load -i $tar_file
+          done
       - name: Run E2E Test ${{ matrix.suite.name }}
         uses: oppia/retry@a9fb265410e634c84ee90f3e87f323fde0541037
         with:
@@ -114,7 +142,7 @@ jobs:
         if: ${{ failure() && github.event_name == 'push' && github.repository == 'oppia/oppia' && github.ref == 'refs/heads/develop'}}
         uses: ./.github/actions/send-webhook-notification
         with:
-          message: "An E2E test failed on the upstream develop branch."
+          message: 'An E2E test failed on the upstream develop branch.'
           webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
   lighthouse:
     runs-on: ${{ matrix.os }}
@@ -123,90 +151,80 @@ jobs:
         os: [ubuntu-22.04]
         shard: [1, 2]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Download Docker Images Artifact
+        uses: actions/download-artifact@v3
         with:
-          python-version: '3.8.15'
-          architecture: 'x64'
-      - name: Free disk space
+          name: docker-images
+
+      - name: Load Docker Images
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY" 
+          for tar_file in docker_images/*.tar; do
+            docker load -i $tar_file
+          done
       - uses: ./.github/actions/merge
       - name: Install chrome
         if: startsWith(github.head_ref, 'update-changelog-for-release') == false
         uses: ./.github/actions/install-chrome
-      - name: Initializing Containers
-        run: |
-          make build
-          docker compose up angular-build -d
-          # This is required as lighthouse tests are run on the host machine and not in the docker container.
-          sudo docker cp oppia-angular-build:/app/oppia/node_modules .
       - name: Run Lighthouse performance checks shard
         if: startsWith(github.head_ref, 'update-changelog-for-release') == false
         run: make run_tests.lighthouse_performance shard=${{ matrix.shard }} RECORD_SCREEN="true"
       - name: Uploading puppeteer video as Artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v3
-        with: 
+        with:
           name: lhci-puppeteer-video
           path: /home/runner/work/oppia/lhci-puppeteer-video/video.mp4
       - name: Report failure if failed on oppia/oppia develop branch
         if: ${{ failure() && github.event_name == 'push' && github.repository == 'oppia/oppia' && github.ref == 'refs/heads/develop'}}
         uses: ./.github/actions/send-webhook-notification
         with:
-          message: "A Lighthouse test failed on the upstream develop branch."
+          message: 'A Lighthouse test failed on the upstream develop branch.'
           webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
   acceptance_test:
-      runs-on:  ${{ matrix.os }}
-      strategy:
-        fail-fast: false
-        matrix:
-          os: [ubuntu-22.04]
-          suite:
-            - blog-admin-tests/assign-roles-to-users-and-change-tag-properties
-            - blog-editor-tests/try-to-publish-a-duplicate-blog-post-and-get-blocked
-            - exploration-editor-tests/load-complete-and-restart-exploration-preview
-            - logged-in-user-tests/click-all-buttons-on-about-page
-            - logged-in-user-tests/click-all-buttons-on-about-foundation-page
-            - logged-in-user-tests/click-all-buttons-on-thanks-for-donating-page
-            - logged-in-user-tests/click-all-buttons-on-navbar
-            - logged-in-user-tests/click-all-links-in-about-oppia-footer
-            - logged-in-user-tests/click-all-links-on-get-started-page
-            - practice-question-admin-tests/add-and-remove-contribution-rights
-            - translation-admin-tests/add-translation-rights
-            - translation-admin-tests/remove-translation-rights
-            - voiceover-admin-tests/add-voiceover-artist-to-an-exploration
-      steps:
-        - uses: actions/checkout@v3
-        - uses: actions/setup-python@v3
-          with:
-            python-version: '3.8.15'
-            architecture: 'x64'
-        - name: Free disk space
-          run: |
-            sudo rm -rf /usr/share/dotnet
-            sudo rm -rf "$AGENT_TOOLSDIRECTORY" 
-        - uses: ./.github/actions/merge
-        - uses: ./.github/actions/install-chrome
-        - name: Initializing Containers
-          run: |
-            make build
-            docker compose up angular-build -d
-            # This is required as lighthouse tests are run on the host machine and not in the docker container.
-            sudo docker cp oppia-angular-build:/app/oppia/node_modules .
-        - name: Run Acceptance Test ${{ matrix.suite }}
-          run: xvfb-run -a --server-args="-screen 0, 1285x1000x24" make run_tests.acceptance suite=${{ matrix.suite }}
-        - name: Run Mobile Acceptance Test ${{ matrix.suite }}
-          run: xvfb-run -a --server-args="-screen 0, 1285x1000x24" make run_tests.acceptance suite=${{ matrix.suite }} MOBILE=true
-        - name: Report failure if failed on oppia/oppia develop branch
-          if: ${{
-            failure() &&
-            github.event_name == 'push' &&
-            github.repository == 'oppia/oppia' &&
-            github.ref == 'refs/heads/develop'
-            }}
-          uses: ./.github/actions/send-webhook-notification
-          with:
-            message: "An acceptance test failed on the upstream develop branch."
-            webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+        suite:
+          - blog-admin-tests/assign-roles-to-users-and-change-tag-properties
+          - blog-editor-tests/try-to-publish-a-duplicate-blog-post-and-get-blocked
+          - exploration-editor-tests/load-complete-and-restart-exploration-preview
+          - logged-in-user-tests/click-all-buttons-on-about-page
+          - logged-in-user-tests/click-all-buttons-on-about-foundation-page
+          - logged-in-user-tests/click-all-buttons-on-thanks-for-donating-page
+          - logged-in-user-tests/click-all-buttons-on-navbar
+          - logged-in-user-tests/click-all-links-in-about-oppia-footer
+          - logged-in-user-tests/click-all-links-on-get-started-page
+          - practice-question-admin-tests/add-and-remove-contribution-rights
+          - translation-admin-tests/add-translation-rights
+          - translation-admin-tests/remove-translation-rights
+          - voiceover-admin-tests/add-voiceover-artist-to-an-exploration
+    steps:
+      - name: Download Docker Images Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-images
+
+      - name: Load Docker Images
+        run: |
+          for tar_file in docker_images/*.tar; do
+            docker load -i $tar_file
+          done
+      - uses: ./.github/actions/merge
+      - uses: ./.github/actions/install-chrome
+      - name: Run Acceptance Test ${{ matrix.suite }}
+        run: xvfb-run -a --server-args="-screen 0, 1285x1000x24" make run_tests.acceptance suite=${{ matrix.suite }}
+      - name: Run Mobile Acceptance Test ${{ matrix.suite }}
+        run: xvfb-run -a --server-args="-screen 0, 1285x1000x24" make run_tests.acceptance suite=${{ matrix.suite }} MOBILE=true
+      - name: Report failure if failed on oppia/oppia develop branch
+        if: ${{
+          failure() &&
+          github.event_name == 'push' &&
+          github.repository == 'oppia/oppia' &&
+          github.ref == 'refs/heads/develop'
+          }}
+        uses: ./.github/actions/send-webhook-notification
+        with:
+          message: 'An acceptance test failed on the upstream develop branch.'
+          webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
