@@ -51,6 +51,7 @@ jobs:
           path: /tmp/docker_images/*.tar
   e2e_test:
     runs-on: ${{ matrix.os }}
+    needs: build
     strategy:
       fail-fast: false
       matrix:
@@ -146,6 +147,7 @@ jobs:
           webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
   lighthouse:
     runs-on: ${{ matrix.os }}
+    needs: build
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -181,6 +183,7 @@ jobs:
           message: 'A Lighthouse test failed on the upstream develop branch.'
           webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
   acceptance_test:
+    needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -188,7 +191,7 @@ jobs:
         os: [ubuntu-22.04]
         suite:
           - blog-admin-tests/assign-roles-to-users-and-change-tag-properties
-          - blog-editor-tests/try-to-publish-a-duplicate-blog-post-and-get-blocked
+          - blog-editor-tests/try-to-publi`sh-a-duplicate-blog-post-and-get-blocked
           - exploration-editor-tests/load-complete-and-restart-exploration-preview
           - logged-in-user-tests/click-all-buttons-on-about-page
           - logged-in-user-tests/click-all-buttons-on-about-foundation-page
