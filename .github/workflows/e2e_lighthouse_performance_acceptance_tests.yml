@@ -38,9 +38,9 @@ jobs:
       - name: Save Docker Containers
         run: |
           mkdir -p /tmp/docker_images
-          services=$(docker-compose config --services)
+          services=$(docker compose config --services)
           for service in $services; do
-            image_id=$(docker-compose images -q $service)
+            image_id=$(docker compose images -q $service)
             docker save -o /tmp/docker_images/${service}.tar $image_id
           done
 
@@ -49,6 +49,7 @@ jobs:
         with:
           name: docker-images
           path: /tmp/docker_images/*.tar
+
   e2e_test:
     runs-on: ${{ matrix.os }}
     needs: build
