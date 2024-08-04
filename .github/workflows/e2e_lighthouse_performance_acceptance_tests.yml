@@ -105,6 +105,7 @@ jobs:
           - name: wipeout
     name: e2e_test (${{ matrix.os }}, ${{ matrix.suite.name }})
     steps:
+      - uses: actions/checkout@v3
       - name: Download Docker Images Artifact
         uses: actions/download-artifact@v3
         with:
@@ -153,6 +154,7 @@ jobs:
         os: [ubuntu-22.04]
         shard: [1, 2]
     steps:
+      - uses: actions/checkout@v3
       - name: Download Docker Images Artifact
         uses: actions/download-artifact@v3
         with:
@@ -204,6 +206,7 @@ jobs:
           - translation-admin-tests/remove-translation-rights
           - voiceover-admin-tests/add-voiceover-artist-to-an-exploration
     steps:
+      - uses: actions/checkout@v3
       - name: Download Docker Images Artifact
         uses: actions/download-artifact@v3
         with:
