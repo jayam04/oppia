@@ -1,0 +1,105 @@
+name: End-to-End, Lighthouse CI performance and Acceptance tests
+on:
+  merge_group:
+    types: [checks_requested]
+  push:
+    branches:
+      - develop
+      - release-*
+  pull_request:
+    branches:
+      - develop
+      - release-*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and export
+        uses: docker/build-push-action@v6
+        with:
+          tags: myimage:latest
+          outputs: type=docker,dest=/tmp/myimage.tar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myimage
+          path: /tmp/myimage.tar
+
+  check_test_suites_to_run:
+    uses: ./.github/workflows/check_test_suites_to_run.yml
+
+  e2e_test:
+    needs: check_test_suites_to_run
+    if: ${{ fromJson(needs.check_test_suites_to_run.outputs.test_suites_to_run).e2e.count > 0 }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        suite: [fileUploadFeatures]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8.15'
+          architecture: 'x64'
+      - uses: ./.github/actions/merge
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - uses: ./.github/actions/install-chrome
+      - name: Install ffmpeg
+        run: sudo apt install ffmpeg
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: myimage
+          path: /tmp
+
+      - name: Load image
+        run: |
+          docker load --input /tmp/myimage.tar
+          docker image ls -a
+
+      - name: Initializing Containers
+        run: |
+          # make build
+          # This is required as E2E tests are run on the host machine and not in the docker container.
+          docker compose up angular-build -d
+          sudo docker cp oppia-angular-build:/app/oppia/node_modules .
+      - name: Run E2E Test ${{ matrix.suite.name }}
+        uses: oppia/retry@a9fb265410e634c84ee90f3e87f323fde0541037
+        with:
+          max_attempts: 2
+          substrings_indicating_flaky_execution: ${{ matrix.suite.flaky_indicators || '' }}
+          command: >
+            sudo xvfb-run -a --server-args="-screen 0, 1285x1000x24" make run_tests.e2e suite=${{ matrix.suite.name }} VIDEO_RECORDING_IS_ENABLED=0
+      - name: tree
+        if: ${{ failure() }}
+        run: |
+          ls /home/runner/work/oppia/
+          ls /home/runner/work/oppia/webdriverio-video
+      - name: Uploading webdriverio-video as Artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: webdriverio-video
+          path: /home/runner/work/oppia/webdriverio-video
+      - name: Uploading webdriverio screenshots as Artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: webdriverio-screenshots
+          path: /home/runner/work/oppia/webdriverio-screenshots
+      - name: Report failure if failed on oppia/oppia develop branch
+        if: ${{ failure() && github.event_name == 'push' && github.repository == 'oppia/oppia' && github.ref == 'refs/heads/develop'}}
+        uses: ./.github/actions/send-webhook-notification
+        with:
+          message: 'An E2E test failed on the upstream develop branch.'
+          webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
