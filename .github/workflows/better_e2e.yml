@@ -20,16 +20,14 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and export
-        uses: docker/build-push-action@v6
-        with:
-          tags: myimage:latest
-          outputs: type=docker,dest=/tmp/myimage.tar
-
+        run: |
+          make build
+          docker save $(docker images -q) -o /path/to/save/mydockersimages.tar
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: myimage
-          path: /tmp/myimage.tar
+          path: /tmp/mydockersimages.tar
 
   check_test_suites_to_run:
     uses: ./.github/workflows/check_test_suites_to_run.yml
@@ -60,7 +58,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: myimage
+          name: mydockersimages
           path: /tmp
 
       - name: Load image
