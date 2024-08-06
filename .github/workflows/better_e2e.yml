@@ -6,6 +6,7 @@ on:
     branches:
       - develop
       - release-*
+      - better-e2e
   pull_request:
     branches:
       - develop
