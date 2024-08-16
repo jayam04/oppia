@@ -29,7 +29,9 @@ jobs:
       - name: Build and export
         run: |
           make build
+          df -h
           docker save $(docker images -q) -o /path/to/save/mydockersimages.tar
+          df -h
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
