@@ -106,12 +106,12 @@ jobs:
           max_attempts: 2
           substrings_indicating_flaky_execution: ${{ matrix.suite.flaky_indicators || '' }}
           command: >
-            if [[ ${{ steps.e2e_test.attempt }} -eq 2 ]]; then
+            echo ${{ steps.e2e_test }};
+            if [ ${{ steps.e2e_test.attempt }} -eq 2 ]; then
               VIDEO_RECORDING_IS_ENABLED=1
             else
               VIDEO_RECORDING_IS_ENABLED=0
             fi;
-            echo ${{ steps.e2e_test }}
             VIDEO_RECORDING_IS_ENABLED=0
             xvfb-run -a --server-args="-screen 0, 1285x1000x24"
             python -m scripts.run_e2e_tests --skip-install
