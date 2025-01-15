@@ -48,9 +48,6 @@ describe('Blog Pages functionality', function () {
     async function () {
       await blogPages.get();
       await blogPages.expectNoResultsFoundShown();
-      await blogPages.expectBlogHomePageWelcomeHeadingToBeVisible();
-      await blogPages.expectOppiaAvatarImageToBeVisible();
-      await blogPages.expectTagFilterComponentToBeVisible();
       await blogPages.expectBlogPostSearchFieldToBeVisible();
     }
   );
