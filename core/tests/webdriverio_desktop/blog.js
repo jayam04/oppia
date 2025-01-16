@@ -28,25 +28,12 @@ describe('Blog Pages functionality', function () {
 
   beforeAll(async function () {
     blogPages = new BlogPages.BlogPages();
-    blogDashboardPage = new BlogDashboardPage.BlogDashboardPage();
-    await users.createUserWithRole(
-      'blog@blogDashboard.com',
-      'blog',
-      'blog admin'
-    );
-    await users.createUserWithRole(
-      'secondBlog@blogDashboard.com',
-      'secondUser',
-      'blog admin'
-    );
-    await users.login('secondBlog@blogDashboard.com');
   });
 
   it(
     'should checks welcome message is visible on homepage, with' +
       ' no results found page as no blog post is published',
     async function () {
-      await blogPages.get();
       await blogPages.expectNoResultsFoundShown();
       await blogPages.expectBlogPostSearchFieldToBeVisible();
     }
@@ -73,7 +60,6 @@ describe('Blog Pages functionality', function () {
         'Hi there, I’m Oppia! I’m an online personal tutor for everybody!',
         ['News', 'International', 'Educators']
       );
-      await blogDashboardPage.navigateToPublishTab();
       await blogDashboardPage.expectNumberOfPublishedBlogPostsToBe(1);
 
       await blogPages.get();
