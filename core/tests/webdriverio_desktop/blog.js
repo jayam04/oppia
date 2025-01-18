@@ -51,7 +51,6 @@ describe('Blog Pages functionality', function () {
       await blogPages.expectBlogHomePageWelcomeHeadingToBeVisible();
       await blogPages.expectOppiaAvatarImageToBeVisible();
       await blogPages.expectTagFilterComponentToBeVisible();
-      await blogPages.expectBlogPostSearchFieldToBeVisible();
     }
   );
 

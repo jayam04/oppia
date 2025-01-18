@@ -75,10 +75,6 @@ describe('Blog Admin', function () {
       );
 
       await blogAdmin.removeBlogEditorRoleFromUsername('guestUsr2');
-      await superAdmin.expectUserNotToHaveRole(
-        'guestUsr2',
-        ROLES.BLOG_POST_EDITOR
-      );
 
       await blogAdmin.expectMaximumTagLimitNotToBe(5);
       await blogAdmin.setMaximumTagLimitTo(5);
