@@ -1,4 +1,4 @@
-name: Full-stack tests
+name: Add Proof of e2e / acceptance tests
 permissions: read-all
 on:
   push:
