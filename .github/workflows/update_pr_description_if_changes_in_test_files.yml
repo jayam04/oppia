@@ -1,0 +1,232 @@
+name: Update PR description if changes in test files (E2E / Acceptance)
+
+permissions:
+  pull-requests: write  # Added permission to modify PR
+  contents: read
+
+on:
+  merge_group:
+    types: [checks_requested]
+  push:
+    branches:
+      - develop
+      - release-*
+  pull_request:
+    branches:
+      - develop
+      - release-*
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  e2e_and_acceptance_coverage:
+    name: Verify all e2e/acceptance tests are included
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Check that all e2e and acceptance test files are captured in wdio.conf.js and core/tests/ci-test-suite-configs
+        run: python -m scripts.check_tests_are_captured_in_ci
+      - name: Report failure if failed on oppia/oppia develop branch
+        if: ${{ failure() && github.event_name == 'push' && github.repository == 'oppia/oppia' && github.ref == 'refs/heads/develop'}}
+        uses: ./.github/actions/send-webhook-notification
+        with:
+          message: "The e2e/acceptance coverage test failed on the upstream develop branch."
+          webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
+
+  check_test_suites_to_run:
+    name: Compute which tests to run
+    runs-on: ubuntu-22.04
+    outputs:
+      TEST_SUITES_TO_RUN: ${{ steps.compute_test_suites.outputs.TEST_SUITES_TO_RUN }}
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - id: compute_test_suites
+        name: Check test suites to run
+        run: |
+          TEST_SUITES_TO_RUN=$(python -m scripts.check_ci_test_suites_to_run --github_head_ref="HEAD" --github_base_ref="origin/${{ github.event.pull_request.base.ref }}")
+      - name: Upload root files mapping as a GitHub artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: root-files-mapping
+          path: root-files-mapping.json
+
+  build:
+    name: Build the app, and store build files as an artifact
+    needs: [check_test_suites_to_run]
+    runs-on: ubuntu-22.04
+    if: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).e2e.count > 0 ||
+            fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).lighthouse_performance.count > 0 ||
+            fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.count > 0 }}
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Generate build files
+        uses: ./.github/actions/generate-build-files
+
+  e2e_test:
+    needs: [check_test_suites_to_run, build]
+    runs-on: ubuntu-22.04
+    if: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).e2e.count > 0 }}
+    strategy:
+      matrix:
+        suite: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).e2e.suites }}
+    name: E2E (${{ matrix.suite.name }})
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Generate build files
+        uses: ./.github/actions/generate-build-files
+      - name: Install Chrome
+        uses: ./.github/actions/install-chrome
+      - name: Install ffmpeg for wdio videos
+        run: |
+          sudo apt-get update
+          sudo apt install ffmpeg
+      - name: Generate modified suite name for artifacts
+        id: generate_suite_name_for_artifacts
+        run: |
+          SUITE_NAME=${{ matrix.suite.name }}
+          echo "MODIFIED_SUITE_NAME=${SUITE_NAME//\//_}" >> $GITHUB_OUTPUT
+      - name: Run E2E Test ${{ matrix.suite.name }}
+        uses: oppia/retry@a9fb265410e634c84ee90f3e87f323fde0541037
+        with:
+          max_attempts: 2
+          substrings_indicating_flaky_execution: ${{ matrix.suite.flaky_indicators || '' }}
+          command: >
+            VIDEO_RECORDING_IS_ENABLED=1
+            xvfb-run -a --server-args="-screen 0, 1285x1000x24"
+            python -m scripts.run_e2e_tests --skip-install
+            --skip-build --suite=${{ matrix.suite.name }} --prod_env
+      - name: Upload test videos as artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-videos-e2e-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          path: /home/runner/work/oppia/webdriverio-video
+      - name: Report failure if failed on oppia/oppia develop branch
+        if: ${{ failure() && github.event_name == 'push' && github.repository == 'oppia/oppia' && github.ref == 'refs/heads/develop'}}
+        uses: ./.github/actions/send-webhook-notification
+        with:
+          message: "An E2E test failed on the upstream develop branch."
+          webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
+
+  acceptance_test_with_python_installation:
+    needs: [check_test_suites_to_run, build]
+    runs-on: ubuntu-22.04
+    if: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.count > 0 }}
+    strategy:
+      matrix:
+        suite: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.suites }}
+    name: Acceptance (${{ matrix.suite.name }})
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Generate build files
+        uses: ./.github/actions/generate-build-files
+      - name: Generate modified suite name for artifacts
+        id: generate_suite_name_for_artifacts
+        run: |
+          SUITE_NAME=${{ matrix.suite.name }}
+          echo "MODIFIED_SUITE_NAME=${SUITE_NAME//\//_}" >> $GITHUB_OUTPUT
+      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }}
+        run: xvfb-run -a --server-args="-screen 0, 1285x1000x24" python -m scripts.run_acceptance_tests --skip-build --suite=${{ matrix.suite.name }} --prod_env
+      - name: Run Mobile Acceptance Test ${{ matrix.suite.name }}
+        run: xvfb-run -a --server-args="-screen 0, 1285x1000x24" python -m scripts.run_acceptance_tests --skip-build --suite=${{ matrix.suite.name }} --prod_env --mobile
+      - name: Report failure if failed on oppia/oppia develop branch
+        if: ${{
+          failure() &&
+          github.event_name == 'push' &&
+          github.repository == 'oppia/oppia' &&
+          github.ref == 'refs/heads/develop'
+          }}
+        uses: ./.github/actions/send-webhook-notification
+        with:
+          message: "An acceptance test failed on the upstream develop branch."
+          webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
+
+  update_pr_description:
+    needs: [e2e_test, acceptance_test_with_python_installation]
+    runs-on: ubuntu-22.04
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      (needs.e2e_test.result == 'success' || needs.e2e_test.result == 'failure')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-videos-*
+          merge-multiple: true
+          path: all-test-videos
+
+      - name: Get PR description
+        uses: actions/github-script@v7
+        id: get-pr-description
+        with:
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            return pullRequest.body || '';
+
+      - name: Update PR description with video links
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Get current PR description
+            let prDescription = '${{ steps.get-pr-description.outputs.result }}';
+            
+            // Find video files
+            const videoDir = 'all-test-videos';
+            const videoFiles = [];
+            fs.readdirSync(videoDir).forEach(file => {
+              if (file.endsWith('.mp4')) {
+                videoFiles.push(file);
+              }
+            });
+            
+            // Generate video section
+            let videoSection = '\n\n### Test Videos\n';
+            videoFiles.forEach(file => {
+              const testName = file.replace('.mp4', '');
+              videoSection += `- [${testName}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts)\n`;
+            });
+            
+            // Check if video section already exists
+            const videoSectionRegex = /### Test Videos\n[\s\S]*?(?=###|$)/;
+            if (prDescription.match(videoSectionRegex)) {
+              // Replace existing video section
+              prDescription = prDescription.replace(videoSectionRegex, videoSection);
+            } else {
+              // Add new video section
+              prDescription += videoSection;
+            }
+            
+            // Update PR description
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: prDescription
+            });
