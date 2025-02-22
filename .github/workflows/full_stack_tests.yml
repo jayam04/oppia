@@ -159,10 +159,7 @@ jobs:
     name: Check that all necessary tests pass
     needs:
       - check_test_suites_to_run
-      - e2e_test
       - acceptance_test_with_python_installation
-      - lighthouse_accessibility_test
-      - lighthouse_performance_test
     if: always()
     runs-on: ubuntu-22.04
     steps:

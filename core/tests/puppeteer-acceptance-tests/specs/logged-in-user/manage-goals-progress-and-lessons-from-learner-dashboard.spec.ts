@@ -116,6 +116,7 @@ describe('Logged-in User', function () {
 
       await loggedInUser.navigateToLearnerDashboardUsingProfileDropdown();
       await loggedInUser.navigateToGoalsSection();
+      debugger;
       await loggedInUser.expectCompletedGoalsToInclude(['Algebra I']);
 
       await loggedInUser.navigateToProgressSection();
