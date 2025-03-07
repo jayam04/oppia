@@ -102,6 +102,7 @@ export class BaseUser {
          * every test passes on both modes. */
         headless,
         args,
+        executablePath: '/opt/custom-chrome/opt/google/chrome/google-chrome',
       })
       .then(async browser => {
         this.startTimeInMilliseconds = Date.now();
