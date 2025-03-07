@@ -134,6 +134,30 @@ export class BaseUser {
           this.page.setViewport({width: 1920, height: 1080});
         }
 
+        this.page.on('request', async request => {
+          console.log(`Request: ${request.method()} ${request.url()}`);
+          if (request.postData()) {
+            console.log(`Payload: ${request.postData()}`);
+          }
+        });
+
+        this.page.on('response', async response => {
+          console.log(`Response: ${response.status()} ${response.url()}`);
+          if (
+            response.headers()['content-type']?.includes('application/json')
+          ) {
+            try {
+              const responseBody = await response.json();
+              console.log(
+                'Response Body:',
+                JSON.stringify(responseBody, null, 2)
+              );
+            } catch (e) {
+              console.log('Error reading response body:', e);
+            }
+          }
+        });
+
         // Enable Video Recording.
         if (process.env.VIDEO_RECORDING_IS_ENABLED === '1') {
           const outputFileName =
