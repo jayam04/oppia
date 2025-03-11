@@ -27,6 +27,9 @@ from core.constants import constants
 from scripts import build
 from scripts import common
 from scripts import servers
+import multiprocessing
+
+from google.cloud import datastore
 
 from typing import Final, List, Optional, Tuple
 
@@ -72,6 +75,20 @@ _PARSER.add_argument(
     help='Run the tests in mobile mode.',
     action='store_true')
 
+def log_datastore_entries(kind: str, project_id: str):
+    import time
+    """Logs all entries of a specific Datastore kind at intervals."""
+    client = datastore.Client(project=project_id)
+    
+    while True:
+        query = client.query(kind=kind)
+        entities = list(query.fetch())
+
+        print(f"\n[Datastore Logger] Found {len(entities)} entries for kind '{kind}':")
+        for entity in entities:
+            print(entity)
+
+        time.sleep(5)  # Adjust logging interval as needed.
 
 def compile_test_ts_files() -> None:
     """Compiles the test typescript files into a build directory."""
@@ -143,6 +160,10 @@ def run_tests(args: argparse.Namespace) -> Tuple[List[bytes], int]:
                 'PORTSERVER_ADDRESS': common.PORTSERVER_SOCKET_FILEPATH,
                 'PIP_NO_DEPS': 'True'
             }))
+        
+        datastore_logger = multiprocessing.Process(target=log_datastore_entries, args=('StoryProgressModel', 'dev-project-id'))
+        datastore_logger.start()
+
 
         proc = stack.enter_context(servers.managed_acceptance_tests_server(
             suite_name=args.suite,
