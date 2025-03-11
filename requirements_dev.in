@@ -17,4 +17,4 @@ pyyaml==6.0
 rcssmin==1.1.1
 webtest==3.0.0
 xmltodict==0.13.0
-google-cloud-datastore
+google-cloud-datastore==2.20.2
