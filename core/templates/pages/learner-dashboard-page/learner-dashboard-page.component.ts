@@ -248,6 +248,14 @@ export class LearnerDashboardPageComponent implements OnInit, OnDestroy {
             LearnerDashboardPageConstants.LEARNER_DASHBOARD_SECTION_I18N_IDS.LEARNER_GROUPS;
         }
 
+        console.log("[Learner Dashboard] Completed Stories:", this.completedStoriesList);
+        console.log("[Learner Dashboard] Partially Learnt Topics:", this.partiallyLearntTopicsList);
+        console.log("[Learner Dashboard] Topics to Learn:", this.topicsToLearn);
+        console.log("[Learner Dashboard] Learnt Topics:", this.learntTopicsList);
+        console.log("[Learner Dashboard] Untracked Topics:", this.untrackedTopics);
+        console.log("[Learner Dashboard] All Topics:", this.allTopics);
+        console.log("[Learner Dashboard] Learnt -> Partially Learnt Topics:", this.learntToPartiallyLearntTopics);
+
         return this.getSubtopicMasteryData();
       },
       errorResponseStatus => {

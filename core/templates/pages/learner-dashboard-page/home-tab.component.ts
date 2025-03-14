@@ -76,6 +76,8 @@ export class HomeTabComponent {
   ngOnInit(): void {
     this.width = this.widthConst * this.currentGoals.length;
     var allGoals = [...this.currentGoals, ...this.partiallyLearntTopicsList];
+    console.log("[Home Page] Current Goals:", this.currentGoals);
+    console.log("[Home Page] Partially Completed Goals:", this.partiallyLearntTopicsList)
     this.currentGoalsLength = this.currentGoals.length;
     this.goalTopicsLength = this.goalTopics.length;
     this.currentGoalIds = new Set(this.currentGoals.map(g => g.id));
