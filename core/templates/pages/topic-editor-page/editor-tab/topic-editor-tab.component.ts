@@ -92,7 +92,7 @@ export class TopicEditorTabComponent implements OnInit, OnDestroy {
   subtopicEditOptionsAreShown: number;
   skillOptionDialogueBox: boolean = true;
   maxCharsInTopicName!: number;
-  MAX_CHARS_IN_TOPIC_URL_FRAGMENT!: number;
+  maxCharsInTopicUrlFragment!: number;
   maxCharsInTopicDescription!: number;
   maxCharsInPageTitleFragmentForWeb!: number;
   maxCharsInMetaTagContent!: number;
@@ -101,7 +101,6 @@ export class TopicEditorTabComponent implements OnInit, OnDestroy {
   classroomUrlFragment: string | null = null;
   classroomName: string | null = null;
   curriculumAdminUsernames: string[] = [];
-  generatedUrlPrefix: string;
 
   constructor(
     private contextService: ContextService,
@@ -122,7 +121,6 @@ export class TopicEditorTabComponent implements OnInit, OnDestroy {
   ) {}
 
   directiveSubscriptions = new Subscription();
-  validUrlFragmentRegex = new RegExp(AppConstants.VALID_URL_FRAGMENT_REGEX);
 
   drop(event: CdkDragDrop<Subtopic[]>): void {
     moveItemInArray(this.subtopics, event.previousIndex, event.currentIndex);
@@ -187,7 +185,6 @@ export class TopicEditorTabComponent implements OnInit, OnDestroy {
         this.contextService.getEntityType(),
         this.contextService.getEntityId()
       );
-    this.generatedUrlPrefix = `${this.hostname}/learn/${this.classroomUrlFragment}`;
   }
 
   getEligibleSkillSummariesForDiagnosticTest(): ShortSkillSummary[] {
@@ -389,11 +386,6 @@ export class TopicEditorTabComponent implements OnInit, OnDestroy {
         newTopicUrlFragment
       );
     }
-  }
-
-  onChangeTopicEditorUrlFragment(urlFragment: string): void {
-    this.editableTopicUrlFragment = urlFragment;
-    this.updateTopicUrlFragment(urlFragment);
   }
 
   updateTopicThumbnailFilename(newThumbnailFilename: string): void {
@@ -673,7 +665,7 @@ export class TopicEditorTabComponent implements OnInit, OnDestroy {
     this.initEditor();
     this._initStorySummaries();
     this.maxCharsInTopicName = AppConstants.MAX_CHARS_IN_TOPIC_NAME;
-    this.MAX_CHARS_IN_TOPIC_URL_FRAGMENT =
+    this.maxCharsInTopicUrlFragment =
       AppConstants.MAX_CHARS_IN_TOPIC_URL_FRAGMENT;
     this.maxCharsInTopicDescription =
       AppConstants.MAX_CHARS_IN_TOPIC_DESCRIPTION;

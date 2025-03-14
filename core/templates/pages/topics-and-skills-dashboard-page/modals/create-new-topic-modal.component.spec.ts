@@ -26,8 +26,6 @@ import {ContextService} from 'services/context.service';
 import {WindowRef} from 'services/contextual/window-ref.service';
 import {ImageLocalStorageService} from 'services/image-local-storage.service';
 import {CreateNewTopicModalComponent} from './create-new-topic-modal.component';
-import {UrlFragmentEditorComponent} from '../../../components/url-fragment-editor/url-fragment-editor.component';
-import {By} from '@angular/platform-browser';
 
 describe('Create new topic modal', () => {
   let fixture: ComponentFixture<CreateNewTopicModalComponent>;
@@ -48,7 +46,7 @@ describe('Create new topic modal', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, FormsModule],
-      declarations: [CreateNewTopicModalComponent, UrlFragmentEditorComponent],
+      declarations: [CreateNewTopicModalComponent],
       providers: [
         NgbActiveModal,
         ImageLocalStorageService,
@@ -184,27 +182,5 @@ describe('Create new topic modal', () => {
     expect(
       topicEditorStateService.updateExistenceOfTopicUrlFragment
     ).not.toHaveBeenCalled();
-  });
-
-  it('should call onUrlFragmentChange when urlFragmentChange event is emitted', () => {
-    spyOn(componentInstance, 'onUrlFragmentChange');
-    const childComponent = fixture.debugElement.query(
-      By.directive(UrlFragmentEditorComponent)
-    );
-    const testFragment = 'test-topic-url-fragment';
-    childComponent.triggerEventHandler('urlFragmentChange', testFragment);
-    expect(componentInstance.onUrlFragmentChange).toHaveBeenCalledWith(
-      testFragment
-    );
-  });
-
-  it('should update newlyCreatedTopic.urlFragment and call onTopicUrlFragmentChange', () => {
-    spyOn(componentInstance, 'onTopicUrlFragmentChange');
-    const newUrlFragment = 'new-topic-url-fragment';
-    componentInstance.onUrlFragmentChange(newUrlFragment);
-    expect(componentInstance.newlyCreatedTopic.urlFragment).toBe(
-      newUrlFragment
-    );
-    expect(componentInstance.onTopicUrlFragmentChange).toHaveBeenCalled();
   });
 });

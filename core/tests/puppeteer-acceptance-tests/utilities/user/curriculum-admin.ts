@@ -75,8 +75,7 @@ const dropdownToggleIcon = '.e2e-test-mobile-options-dropdown';
 const topicsTab = 'a.e2e-test-topics-tab';
 const desktopTopicSelector = 'a.e2e-test-topic-name';
 const topicNameField = 'input.e2e-test-new-topic-name-field';
-const topicUrlFragmentField =
-  '.e2e-test-new-topic-url-fragment-field .e2e-test-url-fragment-field';
+const topicUrlFragmentField = 'input.e2e-test-new-topic-url-fragment-field';
 const topicWebFragmentField = 'input.e2e-test-new-page-title-fragm-field';
 const topicDescriptionField = 'textarea.e2e-test-new-topic-description-field';
 const createTopicButton = 'button.e2e-test-confirm-topic-creation-button';
@@ -98,7 +97,7 @@ const confirmTopicDeletionButton = '.e2e-test-confirm-topic-deletion-button';
 const addSubtopicButton = 'button.e2e-test-add-subtopic-button';
 const subtopicTitleField = 'input.e2e-test-new-subtopic-title-field';
 const subtopicUrlFragmentField =
-  '.e2e-test-create-new-subtopic .e2e-test-url-fragment-field';
+  'input.e2e-test-new-subtopic-url-fragment-field';
 const subtopicDescriptionEditorToggle = 'div.e2e-test-show-schema-editor';
 const createSubtopicButton = '.e2e-test-confirm-subtopic-creation-button';
 const subtopicNameSelector = '.e2e-test-subtopic-name';
@@ -194,9 +193,8 @@ const createNewTopicMobileButton = '.e2e-test-create-topic-mobile-button';
 
 const addStoryButton = 'button.e2e-test-create-story-button';
 const storyTitleField = 'input.e2e-test-new-story-title-field';
-const storyUrlFragmentField =
-  '.e2e-test-create-new-story-url-fragment-field .e2e-test-url-fragment-field';
 const storyDescriptionField = 'textarea.e2e-test-new-story-description-field';
+const storyUrlFragmentField = 'input.e2e-test-new-story-url-fragment-field';
 const createStoryButton = 'button.e2e-test-confirm-story-creation-button';
 const storyPhotoBoxButton =
   'oppia-create-new-story-modal .e2e-test-photo-button';
@@ -381,9 +379,6 @@ export class CurriculumAdmin extends BaseUser {
     }
 
     await this.type(topicNameField, name);
-    await this.page.waitForSelector(topicUrlFragmentField, {
-      visible: true,
-    });
     await this.type(topicUrlFragmentField, urlFragment);
     await this.type(topicWebFragmentField, name);
     await this.type(
@@ -531,10 +526,7 @@ export class CurriculumAdmin extends BaseUser {
     }
     await this.clickOn(addSubtopicButton);
     await this.type(subtopicTitleField, title);
-    await this.page.waitForSelector(subtopicUrlFragmentField, {
-      visible: true,
-    });
-    await this.page.type(subtopicUrlFragmentField, urlFragment);
+    await this.type(subtopicUrlFragmentField, urlFragment);
 
     await this.clickOn(subtopicDescriptionEditorToggle);
     await this.page.waitForSelector(richTextAreaField, {visible: true});
@@ -894,10 +886,7 @@ export class CurriculumAdmin extends BaseUser {
     }
     await this.clickOn(addStoryButton);
     await this.type(storyTitleField, storyTitle);
-    await this.page.waitForSelector(storyUrlFragmentField, {
-      visible: true,
-    });
-    await this.page.type(storyUrlFragmentField, storyUrlFragment);
+    await this.type(storyUrlFragmentField, storyUrlFragment);
     await this.type(
       storyDescriptionField,
       `Story creation description for ${storyTitle}.`
@@ -948,10 +937,7 @@ export class CurriculumAdmin extends BaseUser {
     }
     await this.clickOn(addStoryButton);
     await this.type(storyTitleField, storyTitle);
-    await this.page.waitForSelector(storyUrlFragmentField, {
-      visible: true,
-    });
-    await this.page.type(storyUrlFragmentField, storyUrlFragment);
+    await this.type(storyUrlFragmentField, storyUrlFragment);
     await this.type(
       storyDescriptionField,
       `Story creation description for ${storyTitle}.`

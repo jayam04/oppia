@@ -50,8 +50,6 @@ import {HttpClientTestingModule} from '@angular/common/http/testing';
 import {WindowDimensionsService} from 'services/contextual/window-dimensions.service';
 import {TopicsAndSkillsDashboardBackendApiService} from 'domain/topics_and_skills_dashboard/topics-and-skills-dashboard-backend-api.service';
 import {CdkDragDrop} from '@angular/cdk/drag-drop';
-import {UrlFragmentEditorComponent} from '../../../components/url-fragment-editor/url-fragment-editor.component';
-import {By} from '@angular/platform-browser';
 
 class MockNgbModal {
   open() {
@@ -118,7 +116,6 @@ describe('Topic editor tab directive', () => {
         RearrangeSkillsInSubtopicsModalComponent,
         ChangeSubtopicAssignmentModalComponent,
         SavePendingChangesModalComponent,
-        UrlFragmentEditorComponent,
       ],
       providers: [
         UrlInterpolationService,
@@ -257,7 +254,7 @@ describe('Topic editor tab directive', () => {
     expect(component.maxCharsInTopicName).toEqual(
       AppConstants.MAX_CHARS_IN_TOPIC_NAME
     );
-    expect(component.MAX_CHARS_IN_TOPIC_URL_FRAGMENT).toEqual(
+    expect(component.maxCharsInTopicUrlFragment).toEqual(
       AppConstants.MAX_CHARS_IN_TOPIC_URL_FRAGMENT
     );
     expect(component.maxCharsInTopicDescription).toEqual(
@@ -852,36 +849,5 @@ describe('Topic editor tab directive', () => {
 
     component.removeDiagnosticTestSkillDropdown();
     expect(component.diagnosticTestSkillsDropdownIsShown).toBeFalse();
-  });
-
-  it('should call onChangeTopicEditorUrlFragment when urlFragmentChange event is emitted', () => {
-    spyOn(component, 'onChangeTopicEditorUrlFragment');
-    const childComponent = fixture.debugElement.query(
-      By.directive(UrlFragmentEditorComponent)
-    );
-    const testFragment = 'test-topic-url-fragment';
-    childComponent.triggerEventHandler('urlFragmentChange', testFragment);
-    expect(component.onChangeTopicEditorUrlFragment).toHaveBeenCalledWith(
-      testFragment
-    );
-  });
-
-  it('should call updateTopicUrlFragment when blur event is triggered', () => {
-    spyOn(component, 'updateTopicUrlFragment');
-    const childComponent = fixture.debugElement.query(
-      By.directive(UrlFragmentEditorComponent)
-    );
-    childComponent.triggerEventHandler('blur', {});
-    expect(component.updateTopicUrlFragment).toHaveBeenCalled();
-  });
-
-  it('should update editableTopicUrlFragment and call updateTopicUrlFragment', () => {
-    spyOn(component, 'updateTopicUrlFragment');
-    const newUrlFragment = 'new-topic-url';
-    component.onChangeTopicEditorUrlFragment(newUrlFragment);
-    expect(component.editableTopicUrlFragment).toBe(newUrlFragment);
-    expect(component.updateTopicUrlFragment).toHaveBeenCalledWith(
-      newUrlFragment
-    );
   });
 });

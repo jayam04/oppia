@@ -33,8 +33,6 @@ import {CreateNewSubtopicModalComponent} from './create-new-subtopic-modal.compo
 import {Subtopic} from 'domain/topic/subtopic.model';
 import {EventEmitter, NO_ERRORS_SCHEMA} from '@angular/core';
 import {SubtopicPage} from 'domain/topic/subtopic-page.model';
-import {UrlFragmentEditorComponent} from '../../../components/url-fragment-editor/url-fragment-editor.component';
-import {By} from '@angular/platform-browser';
 
 class MockWindowRef {
   nativeWindow = {
@@ -109,10 +107,7 @@ describe('create new subtopic modal', function () {
   beforeEach(waitForAsync(() => {
     topicEditorStateService = new MockTopicEditorStateService();
     TestBed.configureTestingModule({
-      declarations: [
-        CreateNewSubtopicModalComponent,
-        UrlFragmentEditorComponent,
-      ],
+      declarations: [CreateNewSubtopicModalComponent],
       providers: [
         {
           provide: WindowRef,
@@ -325,22 +320,4 @@ describe('create new subtopic modal', function () {
       expect(ngbActiveModal.close).not.toHaveBeenCalled();
     }
   );
-
-  it('should call onUrlFragmentChange when urlFragmentChange event is emitted', () => {
-    spyOn(component, 'onUrlFragmentChange');
-    const childComponent = fixture.debugElement.query(
-      By.directive(UrlFragmentEditorComponent)
-    );
-    const testFragment = 'test-subtopic-url-fragment';
-    childComponent.triggerEventHandler('urlFragmentChange', testFragment);
-    expect(component.onUrlFragmentChange).toHaveBeenCalledWith(testFragment);
-  });
-
-  it('should update editableUrlFragment and call checkSubtopicExistence', () => {
-    spyOn(component, 'checkSubtopicExistence');
-    const newUrlFragment = 'new-url-fragment';
-    component.onUrlFragmentChange(newUrlFragment);
-    expect(component.editableUrlFragment).toBe(newUrlFragment);
-    expect(component.checkSubtopicExistence).toHaveBeenCalled();
-  });
 });
