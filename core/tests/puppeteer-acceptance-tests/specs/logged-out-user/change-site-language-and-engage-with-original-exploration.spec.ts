@@ -95,7 +95,7 @@ describe('Logged-out User', function () {
 
       // Check the navbar to confirm that it is translated correctly.
       await loggedOutUser.expectNavbarButtonsToHaveText([
-        'परिचय',
+        'के बारे में',
         'बुनियादी गणित',
         'जानिए',
       ]);
@@ -115,8 +115,7 @@ describe('Logged-out User', function () {
 
       await loggedOutUser.continueToNextCard();
       await loggedOutUser.expectExplorationCompletionToastMessage(
-        'इस पाठ को पूरा करने के लिए बधाई! अब आप अगली बार जब वापस आएंगे तो पाठ को शुरू से ' +
-          'शुरू करेंगे।'
+        'Congratulations for completing this lesson!'
       );
     },
     DEFAULT_SPEC_TIMEOUT_MSECS
