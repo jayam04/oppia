@@ -81,6 +81,7 @@ export class BaseUser {
     const args: string[] = [
       '--start-fullscreen',
       '--use-fake-ui-for-media-stream',
+      // '--window-size=1280,${options.height}'
     ];
 
     const headless = process.env.HEADLESS === 'true';
