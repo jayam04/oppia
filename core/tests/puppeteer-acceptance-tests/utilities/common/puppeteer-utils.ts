@@ -79,9 +79,9 @@ export class BaseUser {
    */
   async openBrowser(): Promise<Page> {
     const args: string[] = [
-      '--start-fullscreen',
+      // '--start-fullscreen',
       '--use-fake-ui-for-media-stream',
-      // '--window-size=1280,${options.height}'
+      '--window-size=1920,1080',
     ];
 
     const headless = process.env.HEADLESS === 'true';
