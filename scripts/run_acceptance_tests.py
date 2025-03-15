@@ -162,7 +162,7 @@ def run_tests(args: argparse.Namespace) -> Tuple[List[bytes], int]:
                 'PIP_NO_DEPS': 'True'
             }))
         
-        datastore_logger = multiprocessing.Process(target=log_datastore_entries, args=('StoryProgressModel', 'dev-project-id'))
+        datastore_logger = multiprocessing.Process(target=log_datastore_entries, args=('LearnerGoalsModel', 'dev-project-id'))
         datastore_logger.start()
 
 
