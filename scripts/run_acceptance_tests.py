@@ -75,19 +75,22 @@ _PARSER.add_argument(
     help='Run the tests in mobile mode.',
     action='store_true')
 
-def log_datastore_entries(kind: str, project_id: str):
+def log_datastore_entries(kinds: list, project_id: str):
     import time
     """Logs all entries of a specific Datastore kind at intervals."""
     client = datastore.Client(project=project_id)
     
     while True:
-        query = client.query(kind=kind)
-        entities = list(query.fetch())
+        for kind in kinds:
+            query = client.query(kind=kind)
+            entities = list(query.fetch())
 
-        if len(entities) != 0:
-            print(f"\n[Datastore Logger] Found {len(entities)} entries for kind '{kind}':")
-            for entity in entities:
-                print(entity)
+            if len(entities) != 0:
+                print(f"\n[Datastore Logger] Found {len(entities)} entries for kind '{kind}':")
+                for entity in entities:
+                    print(entity)
+            else:
+                print(f"\n[Datastore Logger] No entries found for kind '{kind}'.")
 
         time.sleep(5)  # Adjust logging interval as needed.
 
@@ -162,9 +165,10 @@ def run_tests(args: argparse.Namespace) -> Tuple[List[bytes], int]:
                 'PIP_NO_DEPS': 'True'
             }))
         
-        datastore_logger = multiprocessing.Process(target=log_datastore_entries, args=('LearnerGoalsModel', 'dev-project-id'))
+        datastore_logger = multiprocessing.Process(target=log_datastore_entries, args=(['LearnerGoalsModel', 'TopicSummaryModel',
+                                                                                        'StorySummaryModel', 'CompletedActivitiesModel',
+                                                                                        'IncompleteActivitiesModel', 'LearnerPlaylistModel'], 'dev-project-id'))
         datastore_logger.start()
-
 
         proc = stack.enter_context(servers.managed_acceptance_tests_server(
             suite_name=args.suite,
