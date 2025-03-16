@@ -75,24 +75,53 @@ _PARSER.add_argument(
     help='Run the tests in mobile mode.',
     action='store_true')
 
-def log_datastore_entries(kinds: list, project_id: str):
+def log_datastore_changes(project_id: str):
     import time
-    """Logs all entries of a specific Datastore kind at intervals."""
+    """Logs changes (additions, updates, deletions) in all Datastore kinds."""
     client = datastore.Client(project=project_id)
-    
+    previous_state = {}  # Stores the last known state of each kind
+
     while True:
+        query = client.query(kind='__kind__')  # Fetch all kinds dynamically
+        kinds = [kind.key.name for kind in query.fetch()]
+
+        current_state = {}
+        changes_detected = False
+
         for kind in kinds:
             query = client.query(kind=kind)
-            entities = list(query.fetch())
+            entities = {entity.key.id_or_name: entity for entity in query.fetch()}
+            current_state[kind] = entities
 
-            if len(entities) != 0:
-                print(f"\n[Datastore Logger] Found {len(entities)} entries for kind '{kind}':")
-                for entity in entities:
-                    print(entity)
-            else:
-                print(f"\n[Datastore Logger] No entries found for kind '{kind}'.")
+            # Detect changes
+            prev_entities = previous_state.get(kind, {})
+            added = set(entities.keys()) - set(prev_entities.keys())
+            deleted = set(prev_entities.keys()) - set(entities.keys())
+            updated = {
+                key for key in entities if key in prev_entities and entities[key] != prev_entities[key]
+            }
 
-        time.sleep(5)  # Adjust logging interval as needed.
+            if added or deleted or updated:
+                changes_detected = True
+                print(f"\n[Datastore Logger] Changes detected in kind '{kind}':")
+                if added:
+                    print(f"  Added {len(added)} entries:")
+                    for key in added:
+                        print(f"    {entities[key]}")
+                if deleted:
+                    print(f"  Deleted {len(deleted)} entries:")
+                    for key in deleted:
+                        print(f"    {prev_entities[key]}")
+                if updated:
+                    print(f"  Updated {len(updated)} entries:")
+                    for key in updated:
+                        print(f"    Before: {prev_entities[key]}")
+                        print(f"    After: {entities[key]}")
+
+        if changes_detected:
+            previous_state = current_state  # Update the snapshot only if changes occurred
+        
+        time.sleep(5)  # Adjust interval as needed
 
 def compile_test_ts_files() -> None:
     """Compiles the test typescript files into a build directory."""
@@ -165,9 +194,7 @@ def run_tests(args: argparse.Namespace) -> Tuple[List[bytes], int]:
                 'PIP_NO_DEPS': 'True'
             }))
         
-        datastore_logger = multiprocessing.Process(target=log_datastore_entries, args=(['LearnerGoalsModel', 'TopicSummaryModel',
-                                                                                        'StorySummaryModel', 'CompletedActivitiesModel',
-                                                                                        'IncompleteActivitiesModel', 'LearnerPlaylistModel'], 'dev-project-id'))
+        datastore_logger = multiprocessing.Process(target=log_datastore_changes, args=['dev-project-id'])
         datastore_logger.start()
 
         proc = stack.enter_context(servers.managed_acceptance_tests_server(
