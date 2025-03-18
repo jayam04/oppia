@@ -195,7 +195,7 @@ def run_tests(args: argparse.Namespace) -> Tuple[List[bytes], int]:
             }))
         
         datastore_logger = multiprocessing.Process(target=log_datastore_changes, args=['dev-project-id'])
-        datastore_logger.start()
+        # datastore_logger.start()
 
         proc = stack.enter_context(servers.managed_acceptance_tests_server(
             suite_name=args.suite,
