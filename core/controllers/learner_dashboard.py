@@ -66,6 +66,7 @@ class LearnerDashboardTopicsAndStoriesProgressHandler(
     def get(self) -> None:
         """Handles GET requests."""
         assert self.user_id is not None
+        print("Checkpoint B1: Request for Learner Progress Made")
         (
             learner_progress_in_topics_and_stories,
             number_of_nonexistent_topics_and_stories) = (
@@ -112,6 +113,8 @@ class LearnerDashboardTopicsAndStoriesProgressHandler(
         learnt_to_partially_learnt_topics = (
             learner_progress_in_topics_and_stories.learnt_to_partially_learnt_topics # pylint: disable=line-too-long
         )
+
+        print("Checkpoint B2: Computed all Values")
         self.values.update({
             'completed_stories_list': completed_story_summary_dicts,
             'learnt_topics_list': learnt_topic_summary_dicts,
