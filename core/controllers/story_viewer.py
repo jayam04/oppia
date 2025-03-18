@@ -32,6 +32,8 @@ from core.domain import story_services
 from core.domain import summary_services
 from core.domain import topic_fetchers
 
+import time
+
 from typing import Dict, List, Optional, Tuple
 
 
@@ -265,13 +267,13 @@ class StoryProgressHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
             completed_node.id for completed_node in completed_nodes]
         ordered_nodes = story.story_contents.get_ordered_nodes()
 
-        print("Checkpoint A1", [completed_node_ids, topic, ordered_nodes])
+        print(f"{time.time()} Checkpoint A1", [completed_node_ids, topic, ordered_nodes])
 
         (next_exp_ids, next_node_id, completed_node_ids) = (
             self._record_node_completion(
                 story_id, node_id, completed_node_ids, ordered_nodes))
         
-        print("Checkpoint A2", [next_exp_ids, next_node_id, completed_node_ids])
+        print(f"{time.time()} Checkpoint A2", [next_exp_ids, next_node_id, completed_node_ids])
 
         ready_for_review_test = False
         exp_summaries = (
@@ -297,7 +299,7 @@ class StoryProgressHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
                 constants.NUM_EXPLORATIONS_PER_REVIEW_TEST == 0)
         )
 
-        print("Checkpoint A3", [exp_summaries, learner_completed_story])
+        print(f"{time.time()} Checkpoint A3", [exp_summaries, learner_completed_story])
         if questions_available and (
                 learner_at_review_point_in_story or learner_completed_story):
             ready_for_review_test = True
@@ -305,11 +307,11 @@ class StoryProgressHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
         # If there is no next_node_id, the story is marked as completed else
         # mark the story as incomplete.
         if next_node_id is None:
-            print("Checkpoint A4", f"Marking story {story_id} as completed")
+            print(f"{time.time()} Checkpoint A4", f"Marking story {story_id} as completed")
             learner_progress_services.mark_story_as_completed(
                 self.user_id, story_id)
         else:
-            print("Checkpoint A4", f"Marking story {story_id} as incomplete")
+            print(f"{time.time()} Checkpoint A4", f"Marking story {story_id} as incomplete")
             learner_progress_services.record_story_started(
                 self.user_id, story.id)
 
@@ -320,21 +322,22 @@ class StoryProgressHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
         for story_reference in topic.canonical_story_references:
             story_ids_in_topic.append(story_reference.story_id)
 
-        print(f"Checkpoint A5", story_ids_in_topic)
-        print(f"Checkpoint A6", completed_story_ids)
+        print(f"{time.time()} Checkpoint A5", story_ids_in_topic)
+        print(f"{time.time()} Checkpoint A6", completed_story_ids)
 
         is_topic_completed = set(story_ids_in_topic).intersection(
             set(completed_story_ids))
         
-        print(f"Checkpoint A7", is_topic_completed)
+        print(f"{time.time()} Checkpoint A7", is_topic_completed)
 
         # If at least one story in the topic is completed,
         # mark the topic as learnt else mark it as partially learnt.
         if not is_topic_completed:
-            print("Checkpoint A8", f"Marking topic {topic.id} as partially learnt")
+            print(f"{time.time()} Checkpoint A8", f"Marking topic {topic.id} as partially learnt")
             learner_progress_services.record_topic_started(
                 self.user_id, topic.id)
         else:
+            print(f"{time.time()} Checkpoint A8ii: Makeing topic {topic} as completed")
             learner_progress_services.mark_topic_as_learnt(
                 self.user_id, topic.id)
 
