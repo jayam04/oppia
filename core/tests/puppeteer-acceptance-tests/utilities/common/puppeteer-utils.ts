@@ -103,6 +103,7 @@ export class BaseUser {
          * every test passes on both modes. */
         headless,
         args,
+        devtools: true,
       })
       .then(async browser => {
         this.startTimeInMilliseconds = Date.now();
@@ -134,6 +135,22 @@ export class BaseUser {
         } else {
           this.page.setViewport({width: 1920, height: 1080});
         }
+
+        // Log Page console
+        this.page.on('console', async message => {
+          const argsConsole = await Promise.all(
+            message.args().map(async arg => {
+              try {
+                return await arg.evaluate(obj => JSON.stringify(obj, null, 2));
+              } catch (error) {
+                return '[Object could not be serialized]';
+              }
+            })
+          );
+          console.log(
+            `[LOG] ${message.type().substr(0, 3).toUpperCase()} ${argsConsole}`
+          );
+        });
 
         // Enable Video Recording.
         if (process.env.VIDEO_RECORDING_IS_ENABLED === '1') {

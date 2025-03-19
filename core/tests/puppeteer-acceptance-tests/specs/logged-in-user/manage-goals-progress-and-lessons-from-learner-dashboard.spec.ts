@@ -116,6 +116,7 @@ describe('Logged-in User', function () {
 
       await loggedInUser.navigateToLearnerDashboardUsingProfileDropdown();
       await loggedInUser.navigateToGoalsSection();
+      // await new Promise(f => setTimeout(f, 1000 * 60 * 10));
       await loggedInUser.expectCompletedGoalsToInclude(['Algebra I']);
 
       await loggedInUser.navigateToProgressSection();
