@@ -155,6 +155,7 @@ export class LearnerDashboardBackendApiService {
         .toPromise()
         .then(
           dashboardData => {
+            console.log("[Dashboard Data]", dashboardData);
             resolve({
               completedStoriesList: dashboardData.completed_stories_list.map(
                 storySummary => StorySummary.createFromBackendDict(storySummary)
