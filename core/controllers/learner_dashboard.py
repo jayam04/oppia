@@ -25,6 +25,9 @@ from core.domain import subscription_services
 from core.domain import summary_services
 from core.domain import user_services
 
+from pprint import pprint
+import time
+
 from typing import Dict, Optional, TypedDict
 
 
@@ -72,7 +75,8 @@ class LearnerDashboardTopicsAndStoriesProgressHandler(
                 learner_progress_services.get_topics_and_stories_progress(
                     self.user_id))
 
-        print(f"[LearnerDashboardTopicsAndStoriesProgressHandler] (1): {learner_progress_in_topics_and_stories}")
+        print(f"{time.time()} [LearnerDashboardTopicsAndStoriesProgressHandler] (1):")
+        pprint(learner_progress_in_topics_and_stories)
         completed_story_sumamries = (
             learner_progress_in_topics_and_stories.completed_story_summaries)
         completed_story_summary_dicts = (
@@ -141,7 +145,8 @@ class LearnerDashboardTopicsAndStoriesProgressHandler(
             'learnt_to_partially_learnt_topics': (
                 learnt_to_partially_learnt_topics),
         }
-        print(f"[LearnerDashboardTopicsAndStoriesProgressHandler] (2): {t}")
+        print(f"{time.time()} [LearnerDashboardTopicsAndStoriesProgressHandler] (2):")
+        pprint(t)
         self.render_json(self.values)
 
 

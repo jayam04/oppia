@@ -34,7 +34,12 @@ from core.domain import topic_fetchers
 
 from typing import Dict, List, Optional, Tuple
 
+from pprint import pprint
+import time
 
+def log(unit, something):
+    print(f"{time.time()} [StoryProgressHandler] ({unit})")
+    pprint(something)
 class FrontendStoryNodeDict(story_domain.StoryNodeDict):
     """Dictionary representing the StoryNode domain object for frontend."""
 
@@ -75,6 +80,7 @@ class StoryPageDataHandler(
         completed_node_ids = [
             completed_node.id for completed_node in completed_nodes
         ]
+
         # Here we use MyPy ignore because we are explicitly changing
         # the type from the list of 'StoryNodeDict' to the list of
         # 'FrontendStoryNodeDict', and this is done because below we
@@ -251,6 +257,7 @@ class StoryProgressHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
             node_id: str. The node ID.
         """
         assert self.user_id is not None
+        log("Story ID", story_id)
         story = story_fetchers.get_story_by_id(story_id)
         if story is None:
             logging.error(
@@ -259,6 +266,7 @@ class StoryProgressHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
             self.render_json({})
             return
         topic = topic_fetchers.get_topic_by_id(story.corresponding_topic_id)
+        log("Story's Topic ID", story.corresponding_topic_id)
         completed_nodes = story_fetchers.get_completed_nodes_in_story(
             self.user_id, story_id)
         completed_node_ids = [
@@ -308,19 +316,27 @@ class StoryProgressHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
         completed_story_ids = (
             learner_progress_services.get_all_completed_story_ids(
                 self.user_id))
+
+        log("Completed Stories", completed_story_ids)
         story_ids_in_topic = []
         for story_reference in topic.canonical_story_references:
             story_ids_in_topic.append(story_reference.story_id)
 
+        log("Stories in Topic", story_ids_in_topic)
+
         is_topic_completed = set(story_ids_in_topic).intersection(
             set(completed_story_ids))
+
+        log("Is topic Completed?", is_topic_completed)
 
         # If at least one story in the topic is completed,
         # mark the topic as learnt else mark it as partially learnt.
         if not is_topic_completed:
+            log("Starting Topic A8", None)
             learner_progress_services.record_topic_started(
                 self.user_id, topic.id)
         else:
+            log("Marking {story.corresponding_topic_id} as learnt", None)
             learner_progress_services.mark_topic_as_learnt(
                 self.user_id, topic.id)
 

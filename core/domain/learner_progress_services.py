@@ -43,7 +43,13 @@ from core.platform import models
 
 
 from typing import Dict, List, Optional, Tuple, TypedDict
+from pprint import pprint
+import time
 
+def log(unit, something = None):
+    print(f"{time.time()} [LearnerProgressServices] ({unit})")
+    if something:
+        pprint(something)
 MYPY = False
 if MYPY:  # pragma: no cover
     from mypy_imports import datastore_services
@@ -338,15 +344,20 @@ def mark_topic_as_learnt(user_id: str, topic_id: str) -> None:
     topic_ids_to_learn = learner_goals_services.get_all_topic_ids_to_learn(
         user_id)
 
+    log("Topics to Learn", topic_ids_to_learn)
     activities_completed = _get_completed_activities_from_model(
         completed_activities_model)
 
+    log("activities_completed", activities_completed)
     if topic_id not in activities_completed.learnt_topic_ids:
         remove_topic_from_partially_learnt_list(user_id, topic_id)
         if topic_id in topic_ids_to_learn:
+            log("removing topic from topics to learn")
             learner_goals_services.remove_topics_from_learn_goal(
                 user_id, [topic_id])
+        log("Adding topic to activities completed")
         activities_completed.add_learnt_topic_id(topic_id)
+        log("Saving Activities Completed")
         _save_completed_activities(activities_completed)
 
 
