@@ -127,7 +127,21 @@ class LearnerDashboardTopicsAndStoriesProgressHandler(
             'learnt_to_partially_learnt_topics': (
                 learnt_to_partially_learnt_topics),
         })
-        print(f"[LearnerDashboardTopicsAndStoriesProgressHandler] (2): {self.render_json(self.values)}")
+        t = {
+            'completed_stories_list': completed_story_summary_dicts,
+            'learnt_topics_list': learnt_topic_summary_dicts,
+            'partially_learnt_topics_list': (
+                partially_learnt_topic_summary_dicts),
+            'topics_to_learn_list': topics_to_learn_summary_dicts,
+            'all_topics_list': all_topic_summary_dicts,
+            'untracked_topics': untracked_topic_summary_dicts,
+            'number_of_nonexistent_topics_and_stories': (
+                number_of_nonexistent_topics_and_stories),
+            'completed_to_incomplete_stories': completed_to_incomplete_stories,
+            'learnt_to_partially_learnt_topics': (
+                learnt_to_partially_learnt_topics),
+        }
+        print(f"[LearnerDashboardTopicsAndStoriesProgressHandler] (2): {t}")
         self.render_json(self.values)
 
 
