@@ -72,6 +72,7 @@ class LearnerDashboardTopicsAndStoriesProgressHandler(
                 learner_progress_services.get_topics_and_stories_progress(
                     self.user_id))
 
+        print(f"[LearnerDashboardTopicsAndStoriesProgressHandler] (1): {learner_progress_in_topics_and_stories}")
         completed_story_sumamries = (
             learner_progress_in_topics_and_stories.completed_story_summaries)
         completed_story_summary_dicts = (
@@ -126,6 +127,7 @@ class LearnerDashboardTopicsAndStoriesProgressHandler(
             'learnt_to_partially_learnt_topics': (
                 learnt_to_partially_learnt_topics),
         })
+        print(f"[LearnerDashboardTopicsAndStoriesProgressHandler] (2): {self.render_json(self.values)}")
         self.render_json(self.values)
 
 
