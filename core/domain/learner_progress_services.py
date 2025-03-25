@@ -301,7 +301,7 @@ def mark_exploration_as_completed(user_id: str, exp_id: str) -> None:
         learner_playlist_services.remove_exploration_from_learner_playlist(
             user_id, exp_id)
         activities_completed.add_exploration_id(exp_id)
-        _save_completed_activities(activities_completed)
+        _save_completed_activities(activities_completed, marker=f"Exploration: {exp_id}")
 
 
 def mark_story_as_completed(user_id: str, story_id: str) -> None:
@@ -399,7 +399,7 @@ def mark_collection_as_completed(user_id: str, collection_id: str) -> None:
         learner_playlist_services.remove_collection_from_learner_playlist(
             user_id, collection_id)
         activities_completed.add_collection_id(collection_id)
-        _save_completed_activities(activities_completed)
+        _save_completed_activities(activities_completed, marker=f"Collection: {collection_id}")
 
 
 def mark_exploration_as_incomplete(
@@ -731,7 +731,7 @@ def remove_story_from_completed_list(user_id: str, story_id: str) -> None:
             completed_activities_model)
         if story_id in activities_completed.story_ids:
             activities_completed.remove_story_id(story_id)
-            _save_completed_activities(activities_completed)
+            _save_completed_activities(activities_completed, f"R Story: {story_id}")
 
 
 def remove_topic_from_learnt_list(user_id: str, topic_id: str) -> None:
@@ -751,7 +751,7 @@ def remove_topic_from_learnt_list(user_id: str, topic_id: str) -> None:
             completed_activities_model)
         if topic_id in activities_completed.learnt_topic_ids:
             activities_completed.remove_learnt_topic_id(topic_id)
-            _save_completed_activities(activities_completed)
+            _save_completed_activities(activities_completed, marker=f"R Topic: {topic_id}")
 
 
 def remove_collection_from_completed_list(
@@ -773,7 +773,7 @@ def remove_collection_from_completed_list(
             completed_activities_model)
         if collection_id in activities_completed.collection_ids:
             activities_completed.remove_collection_id(collection_id)
-            _save_completed_activities(activities_completed)
+            _save_completed_activities(activities_completed, f"R Collection: {collection_id}")
 
 
 def _remove_activity_ids_from_completed_list(
