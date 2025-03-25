@@ -188,7 +188,8 @@ def _get_last_playthrough_information(
 
 
 def _save_completed_activities(
-    activities_completed: user_domain.CompletedActivities
+    activities_completed: user_domain.CompletedActivities,
+    marker: str = 'None'
 ) -> None:
     """Save an activities completed domain object as a
     CompletedActivitiesModel instance in the datastore.
@@ -204,6 +205,7 @@ def _save_completed_activities(
         'story_ids': activities_completed.story_ids,
         'learnt_topic_ids': activities_completed.learnt_topic_ids
     }
+    log(f"_save_completed_activities Marker:{marker}", activities_completed_dict)
 
     completed_activities_model = (
         user_models.CompletedActivitiesModel.get_by_id(activities_completed.id))
@@ -213,6 +215,7 @@ def _save_completed_activities(
         completed_activities_model.put()
     else:
         activities_completed_dict['id'] = activities_completed.id
+        log(f"_save_completed_activities Marker:{marker}", "Finally putting completed activities in user model")
         user_models.CompletedActivitiesModel(**activities_completed_dict).put()
 
 
@@ -323,7 +326,7 @@ def mark_story_as_completed(user_id: str, story_id: str) -> None:
     if story_id not in activities_completed.story_ids:
         remove_story_from_incomplete_list(user_id, story_id)
         activities_completed.add_story_id(story_id)
-        _save_completed_activities(activities_completed)
+        _save_completed_activities(activities_completed, marker="Story")
 
 
 def mark_topic_as_learnt(user_id: str, topic_id: str) -> None:
