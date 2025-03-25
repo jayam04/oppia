@@ -361,7 +361,7 @@ def mark_topic_as_learnt(user_id: str, topic_id: str) -> None:
         log("Adding topic to activities completed")
         activities_completed.add_learnt_topic_id(topic_id)
         log("Saving Activities Completed")
-        _save_completed_activities(activities_completed)
+        _save_completed_activities(activities_completed, marker="Topic")
 
 
 def mark_collection_as_completed(user_id: str, collection_id: str) -> None:
