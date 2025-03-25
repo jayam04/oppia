@@ -326,7 +326,7 @@ def mark_story_as_completed(user_id: str, story_id: str) -> None:
     if story_id not in activities_completed.story_ids:
         remove_story_from_incomplete_list(user_id, story_id)
         activities_completed.add_story_id(story_id)
-        _save_completed_activities(activities_completed, marker="Story")
+        _save_completed_activities(activities_completed, marker=f"Story {story_id}")
 
 
 def mark_topic_as_learnt(user_id: str, topic_id: str) -> None:
@@ -361,7 +361,7 @@ def mark_topic_as_learnt(user_id: str, topic_id: str) -> None:
         log("Adding topic to activities completed")
         activities_completed.add_learnt_topic_id(topic_id)
         log("Saving Activities Completed")
-        _save_completed_activities(activities_completed, marker="Topic")
+        _save_completed_activities(activities_completed, marker=f"Topic {topic_id}")
 
 
 def mark_collection_as_completed(user_id: str, collection_id: str) -> None:
