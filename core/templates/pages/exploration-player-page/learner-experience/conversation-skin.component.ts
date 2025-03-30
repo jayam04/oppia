@@ -228,7 +228,9 @@ export class ConversationSkinComponent {
     private learnerDashboardBackendApiService: LearnerDashboardBackendApiService,
     private conversationFlowService: ConversationFlowService,
     private entityVoiceoversService: EntityVoiceoversService,
-    private voiceoverPlayerService: VoiceoverPlayerService
+    private voiceoverPlayerService: VoiceoverPlayerService,
+
+    private explorationCompletionPromise: Promise<void> | null = null
   ) {}
 
   adjustPageHeightOnresize(): void {
@@ -349,16 +351,18 @@ export class ConversationSkinComponent {
           if (!this._editorPreviewMode && this.nextCard.isTerminal()) {
             const currentEngineService =
               this.explorationPlayerStateService.getCurrentEngineService();
-            this.statsReportingService.recordExplorationCompleted(
-              newStateName,
-              this.learnerParamsService.getAllParams(),
-              String(
-                this.completedChaptersCount && this.completedChaptersCount + 1
-              ),
-              String(this.playerTranscriptService.getNumCards()),
-              currentEngineService.getLanguageCode()
-            );
-
+            this.explorationCompletionPromise = new Promise<void>(resolve => {
+              this.statsReportingService.recordExplorationCompleted(
+                newStateName,
+                this.learnerParamsService.getAllParams(),
+                String(
+                  this.completedChaptersCount && this.completedChaptersCount + 1
+                ),
+                String(this.playerTranscriptService.getNumCards()),
+                currentEngineService.getLanguageCode()
+              );
+              resolve(); // Resolve the promise after completion
+            });
             // If the user is a guest, has completed this exploration
             // within the context of a collection, and the collection is
             // allowlisted, record their temporary progress.
@@ -1001,39 +1005,51 @@ export class ConversationSkinComponent {
             this.recommendedExplorationSummaries = nextStoryNode;
           });
         if (this.isLoggedIn) {
-          this.storyViewerBackendApiService
-            .recordChapterCompletionAsync(
-              topicUrlFragment,
-              classroomUrlFragment,
-              storyUrlFragment,
-              nodeId
-            )
-            .then(returnObject => {
-              if (returnObject.readyForReviewTest) {
-                (
-                  this.windowRef.nativeWindow as {location: string | Location}
-                ).location = this.urlInterpolationService.interpolateUrl(
-                  TopicViewerDomainConstants.REVIEW_TESTS_URL_TEMPLATE,
-                  {
-                    topic_url_fragment: topicUrlFragment,
-                    classroom_url_fragment: classroomUrlFragment,
-                    story_url_fragment: storyUrlFragment,
+          if (!this.explorationCompletionPromise) {
+            console.error(
+              "Coudldn't find explorationCompletionPromise, not completing story, even if required to."
+            );
+          }
+          if (this.explorationCompletionPromise) {
+            this.explorationCompletionPromise.then(() => {
+              this.storyViewerBackendApiService
+                .recordChapterCompletionAsync(
+                  topicUrlFragment,
+                  classroomUrlFragment,
+                  storyUrlFragment,
+                  nodeId
+                )
+                .then(returnObject => {
+                  if (returnObject.readyForReviewTest) {
+                    (
+                      this.windowRef.nativeWindow as {
+                        location: string | Location;
+                      }
+                    ).location = this.urlInterpolationService.interpolateUrl(
+                      TopicViewerDomainConstants.REVIEW_TESTS_URL_TEMPLATE,
+                      {
+                        topic_url_fragment: topicUrlFragment,
+                        classroom_url_fragment: classroomUrlFragment,
+                        story_url_fragment: storyUrlFragment,
+                      }
+                    );
                   }
-                );
-              }
-              this.learnerDashboardBackendApiService
-                .fetchLearnerCompletedChaptersCountDataAsync()
-                .then(responseData => {
-                  let newCompletedChaptersCount =
-                    responseData.completedChaptersCount;
-                  if (
-                    newCompletedChaptersCount !== this.completedChaptersCount
-                  ) {
-                    this.completedChaptersCount = newCompletedChaptersCount;
-                    this.chapterIsCompletedForTheFirstTime = true;
-                  }
+                  this.learnerDashboardBackendApiService
+                    .fetchLearnerCompletedChaptersCountDataAsync()
+                    .then(responseData => {
+                      let newCompletedChaptersCount =
+                        responseData.completedChaptersCount;
+                      if (
+                        newCompletedChaptersCount !==
+                        this.completedChaptersCount
+                      ) {
+                        this.completedChaptersCount = newCompletedChaptersCount;
+                        this.chapterIsCompletedForTheFirstTime = true;
+                      }
+                    });
                 });
             });
+          }
         } else {
           let loginRedirectUrl = this.urlInterpolationService.interpolateUrl(
             StoryViewerDomainConstants.STORY_PROGRESS_URL_TEMPLATE,
