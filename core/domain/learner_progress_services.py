@@ -257,6 +257,7 @@ def _save_last_playthrough_information(
     last_playthrough_information_model.put()
 
 
+@datastore_services.run_in_transaction_wrapper(retries=3)
 def mark_exploration_as_completed(user_id: str, exp_id: str) -> None:
     """Adds the exploration id to the completed list of the user unless the
     exploration has already been completed or has been created/edited by the
@@ -295,6 +296,7 @@ def mark_exploration_as_completed(user_id: str, exp_id: str) -> None:
         _save_completed_activities(activities_completed)
 
 
+@datastore_services.run_in_transaction_wrapper(retries=3)
 def mark_story_as_completed(user_id: str, story_id: str) -> None:
     """Adds the story id to the completed list of the user unless the
     story has already been completed by the user. It is also removed from
@@ -320,6 +322,7 @@ def mark_story_as_completed(user_id: str, story_id: str) -> None:
         _save_completed_activities(activities_completed)
 
 
+@datastore_services.run_in_transaction_wrapper(retries=3)
 def mark_topic_as_learnt(user_id: str, topic_id: str) -> None:
     """Adds the topic id to the learnt list of the user unless the
     topic has already been learnt by the user. It is also removed from

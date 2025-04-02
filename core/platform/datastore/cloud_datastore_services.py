@@ -55,6 +55,10 @@ TextProperty = ndb.TextProperty
 TYPE_MODEL_SUBCLASS = TypeVar('TYPE_MODEL_SUBCLASS', bound=Model) # pylint: disable=invalid-name
 MAX_GET_RETRIES = 3
 
+# Type variables for function signature preservation
+T = TypeVar('T')
+F = TypeVar('F', bound=Callable[..., Any])
+
 CLIENT = ndb.Client()
 
 
@@ -259,3 +263,76 @@ def fetch_multiple_entities_by_ids_and_models(
         start_index = start_index + len(entity_ids)
 
     return all_models_grouped_by_model_type
+
+
+def run_in_transaction_wrapper(
+    func: F = None, 
+    retries: int = 3, 
+    initial_delay: float = 0.1,
+    max_delay: float = 1.0,
+    exponential_backoff: bool = True
+) -> F:
+    """Decorator that runs a function in a transaction with retries.
+    
+    This decorator wraps a function to run it within a Cloud Datastore
+    transaction. It will retry the transaction if it fails, using
+    exponential backoff between retries.
+    
+    Args:
+        func: The function to decorate.
+        retries: Maximum number of retry attempts.
+        initial_delay: Initial delay between retries in seconds.
+        max_delay: Maximum delay between retries in seconds.
+        exponential_backoff: Whether to use exponential backoff for retries.
+        
+    Returns:
+        The decorated function that runs in a transaction with retries.
+    """
+    def decorator(f: F) -> F:
+        @functools.wraps(f)
+        def transaction_wrapper(*args: Any, **kwargs: Any) -> Any:
+            """Runs the given function in a transaction with retries."""
+            current_delay = initial_delay
+            last_exception: Optional[Exception] = None
+            
+            for attempt in range(retries + 1):  # +1 for the initial attempt
+                try:
+                    return ndb.transaction(lambda: f(*args, **kwargs))
+                except (ndb.TransactionFailedError, 
+                        ndb.Aborted, 
+                        ndb.ConcurrentTransactionError) as e:
+                    last_exception = e
+                    if attempt >= retries:
+                        break
+                    
+                    # Log the retry attempt
+                    logging.warning(
+                        'Transaction for function %s failed (attempt %d/%d): %s. Retrying...',
+                        f.__name__, attempt + 1, retries, e)
+                    
+                    # Sleep before retrying
+                    time.sleep(current_delay)
+                    
+                    # Calculate next delay with exponential backoff if enabled
+                    if exponential_backoff:
+                        current_delay = min(current_delay * 2, max_delay)
+                    
+                except Exception as e:
+                    # For other exceptions, we don't retry
+                    logging.error(
+                        'Transaction for function %s failed with non-retryable error: %s',
+                        f.__name__, e)
+                    raise
+            
+            # If we've exhausted all retries
+            logging.error(
+                'Transaction for function %s failed after %d attempts. Last error: %s',
+                f.__name__, retries + 1, last_exception)
+            raise last_exception
+        
+        return cast(F, transaction_wrapper)
+    
+    # Allow the decorator to be used with or without arguments
+    if func is None:
+        return decorator
+    return decorator(func)
