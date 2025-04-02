@@ -85,7 +85,7 @@ jobs:
                   61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 
                   81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
       fail-fast: false
-    name: Acceptance (${{ matrix.suite.name }})
+    name: Acceptance (Attempt ${{ matrix.attempt }})
     steps:
       - name: Checkout repository so that local actions can be used
         uses: actions/checkout@v4
@@ -97,7 +97,7 @@ jobs:
         id: generate_suite_name_for_artifacts
         # Replace slashes in the filename with underscores.
         run: |
-          SUITE_NAME=${{ matrix.suite.name }}
+          SUITE_NAME=${{ matrix.attempt }}
           echo "MODIFIED_SUITE_NAME=${SUITE_NAME//\//_}" >> $GITHUB_OUTPUT
 
       - name: Run Desktop Acceptance Test Attempt ${{ matrix.attempt }}
