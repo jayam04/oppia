@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: []
+        suite: [""]
         attempt: ${{ range(1, 101) }}
     name: E2E (${{ matrix.suite.name }})
     steps:
