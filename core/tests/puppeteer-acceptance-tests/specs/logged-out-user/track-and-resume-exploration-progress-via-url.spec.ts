@@ -174,6 +174,7 @@ describe('Logged-out User', function () {
   );
 
   afterAll(async function () {
+    await loggedOutUser.page.waitForTimeout(30 * 1000);
     await UserFactory.closeAllBrowsers();
   });
 });
