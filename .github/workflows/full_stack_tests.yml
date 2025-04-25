@@ -48,7 +48,7 @@ jobs:
       - name: Run Acceptance Test
         run: |
           set -o pipefail
-          VIDEO_RECORDING_IS_ENABLED=1
+          VIDEO_RECORDING_IS_ENABLED=1 \
           xvfb-run -a --server-args="-screen 0 1285x1000x24" \
           python -m scripts.run_acceptance_tests \
           --skip-build --suite="logged-out-user/track-and-resume-exploration-progress-via-url" \
