@@ -394,6 +394,9 @@ export class ExplorationFooterComponent {
             count++;
           }
         }
+        console.log(
+          `${new Date().toLocaleTimeString()} Found ${count} checkpoints`
+        );
         this.checkpointCount = count;
       });
   }

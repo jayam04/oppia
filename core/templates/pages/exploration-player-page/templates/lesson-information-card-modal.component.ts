@@ -145,6 +145,9 @@ export class LessonInformationCardModalComponent extends ConfirmOrCancelModal {
     // i.e. whether it is completed, in-progress, or yet-to-be-completed by the
     // learner. This information is then used to display the progress bar
     // in the lesson info card.
+    console.log(
+      `${new Date().toLocaleTimeString()} Hey from Lesson Information Card Modal Comp - ${this.checkpointCount}`
+    );
     this.checkpointStatusArray = new Array(this.checkpointCount);
     for (let i = 0; i < this.completedCheckpointsCount; i++) {
       this.checkpointStatusArray[i] = CHECKPOINT_STATUS_COMPLETED;
