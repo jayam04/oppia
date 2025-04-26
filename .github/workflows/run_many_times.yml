@@ -1,0 +1,90 @@
+name: Repeated Acceptance Test (200x)
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - develop
+
+permissions: read-all
+
+jobs:
+  build:
+    name: Build the app
+    runs-on: ubuntu-22.04
+    outputs:
+      build_id: ${{ steps.set_output.outputs.build_id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+
+      - name: Generate build files
+        uses: ./.github/actions/generate-build-files
+
+      - name: Set dummy output
+        id: set_output
+        run: echo "build_id=done" >> "$GITHUB_OUTPUT"
+
+  run_acceptance_test:
+    needs: build
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        run_number: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        run_number2: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    name: Run acceptance test ${{ matrix.run_number }}.${{ matrix.run_number2 }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+
+      - name: Generate build files (reusing output)
+        uses: ./.github/actions/generate-build-files
+
+      - name: Run Acceptance Test
+        run: |
+          set -o pipefail
+          VIDEO_RECORDING_IS_ENABLED=1 \
+          xvfb-run -a --server-args="-screen 0 1285x1000x24" \
+          python -m scripts.run_acceptance_tests \
+          --skip-build --suite="blog-editor/try-to-publish-a-duplicate-blog-post-and-get-blocked" \
+          --prod_env --mobile --server_log_level=info \
+          | tee acceptance_test_retry_${{ matrix.run_number }}.log
+
+      - name: Upload Logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-test-log-${{ matrix.run_number }}
+          path: |
+            acceptance_test_${{ matrix.run_number }}.log
+            acceptance_test_retry_${{ matrix.run_number }}.log
+
+      - name: Upload screenshots
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ matrix.run_number }}
+          path: |
+            /home/runner/work/oppia/oppia_full_stack_test_failure_screenshots/acceptance
+
+      - name: Upload video
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ matrix.run_number }}
+          path: |
+            /home/runner/work/oppia/oppia_full_stack_test_video_recordings/acceptance
+
+      - name: Uploading diff screenshots as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: diff-snapshots-${{ matrix.run_number }}-${{ matrix.run_number2 }}
+          # Note: The path must be kept in sync with the one specified in
+          # core/tests/puppeteer-acceptance-tests/utilities/common/puppeteer-utils.ts
+          path: /home/runner/work/oppia/oppia/core/tests/puppeteer-acceptance-tests/diff-snapshots
