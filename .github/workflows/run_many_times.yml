@@ -1,4 +1,4 @@
-name: Repeated Acceptance Test (200x)
+name: Repeated E2E Test (256x)
 on:
   workflow_dispatch:
   pull_request:
@@ -27,7 +27,7 @@ jobs:
         id: set_output
         run: echo "build_id=done" >> "$GITHUB_OUTPUT"
 
-  run_acceptance_test:
+  run_test:
     needs: build
     runs-on: ubuntu-22.04
     strategy:
@@ -46,45 +46,25 @@ jobs:
       - name: Generate build files (reusing output)
         uses: ./.github/actions/generate-build-files
 
-      - name: Run Acceptance Test
+      - name: Run E2E Test
         run: |
           set -o pipefail
           VIDEO_RECORDING_IS_ENABLED=1 \
           xvfb-run -a --server-args="-screen 0 1285x1000x24" \
-          python -m scripts.run_acceptance_tests \
-          --skip-build --suite="blog-editor/try-to-publish-a-duplicate-blog-post-and-get-blocked" \
-          --prod_env --mobile --server_log_level=info \
-          | tee acceptance_test_retry_${{ matrix.run_number }}.log
+          python -m scripts.run_e2e_tests \
+          --skip-build --suite="creatorDashboard" \
+          --prod_env \
+          | tee acceptance_test_retry_${{ matrix.run_number }}.${{matrix.run_number2}}.log
 
-      - name: Upload Logs
+      - name: Uploading webdriverio-video as Artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: acceptance-test-log-${{ matrix.run_number }}
-          path: |
-            acceptance_test_${{ matrix.run_number }}.log
-            acceptance_test_retry_${{ matrix.run_number }}.log
-
-      - name: Upload screenshots
+          name: webdriverio-video-${{matrix.run_number}}.${{matrix.run_number2}}
+          path: /home/runner/work/oppia/webdriverio-video
+      - name: Uploading webdriverio screenshots as Artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: test-artifacts-${{ matrix.run_number }}
-          path: |
-            /home/runner/work/oppia/oppia_full_stack_test_failure_screenshots/acceptance
-
-      - name: Upload video
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-artifacts-${{ matrix.run_number }}
-          path: |
-            /home/runner/work/oppia/oppia_full_stack_test_video_recordings/acceptance
-
-      - name: Uploading diff screenshots as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: diff-snapshots-${{ matrix.run_number }}-${{ matrix.run_number2 }}
-          # Note: The path must be kept in sync with the one specified in
-          # core/tests/puppeteer-acceptance-tests/utilities/common/puppeteer-utils.ts
-          path: /home/runner/work/oppia/oppia/core/tests/puppeteer-acceptance-tests/diff-snapshots
+          name: webdriverio-screenshots-${{matrix.run_number}}.${{matrix.run_number2}}
+          path: /home/runner/work/oppia/webdriverio-screenshots
