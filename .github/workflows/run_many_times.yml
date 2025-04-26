@@ -52,7 +52,7 @@ jobs:
           VIDEO_RECORDING_IS_ENABLED=1 \
           xvfb-run -a --server-args="-screen 0 1285x1000x24" \
           python -m scripts.run_acceptance_tests \
-          --skip-build --suite="blog-editor/try-to-publish-a-duplicate-blog-post-and-get-blocked" \
+          --skip-build --suite="logged-out-user/subscribe-to-newsletter-and-click-all-buttons" \
           --prod_env --mobile --server_log_level=info \
           | tee acceptance_test_retry_${{ matrix.run_number }}.log
 
