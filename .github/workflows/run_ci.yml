@@ -34,7 +34,7 @@ jobs:
         run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
       - name: Reinstall Pip
         run: >
-          python -m pip uninstall pip;
+          python -m pip uninstall -y pip;
           wget https://bootstrap.pypa.io/get-pip.py
           python get-pip.py pip==24.3.1
 
