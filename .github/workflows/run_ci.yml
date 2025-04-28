@@ -32,6 +32,9 @@ jobs:
           echo $GITHUB_WORKSPACE
       - name: Suppress ENOSPC error from chokidar file watcher. See https://stackoverflow.com/a/32600959.
         run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+      - name: Check pip health
+        run: >
+          python -m pip debug
       - name: Reinstall Pip
         run: >
           python -m pip uninstall -y pip;
