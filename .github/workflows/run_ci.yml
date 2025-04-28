@@ -1,4 +1,4 @@
-name: Frontend unit tests
+name: Run CI Checks
 permissions: read-all
 on:
   push:
