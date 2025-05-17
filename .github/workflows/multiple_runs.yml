@@ -30,8 +30,8 @@ jobs:
       fail-fast: false
       matrix:
         suite: ["blog-editor/try-to-publish-a-duplicate-blog-post-and-get-blocked"]
-        run1: [1, 2, 3, 4]
-        run2: [1, 2, 3, 4]
+        run1: [1, 2, 3, 4, 5, 6, 7, 8]
+        run2: [1, 2, 3, 4, 5, 6]
     name: Acceptance (${{ matrix.suite }})
     steps:
       - name: Check for broken suites
