@@ -401,6 +401,15 @@ const blogPostTitleContainerSelector =
   '.e2e-test-blog-post-page-title-container';
 const blogPostContentSelector = '.e2e-test-blog-post-content';
 
+// Topic Viewer Page Selectors.
+const topicPageRevisionTabContentSelector =
+  '.e2e-test-topic-viewer-revision-tab';
+
+// Exploration Player Selectors.
+const learnerViewCardSelector = '.oppia-learner-view-card-content';
+const signInBoxInSaveProressModalSelector = '.sign-in-box';
+const loginButtonSelector = '.e2e-mobile-test-login';
+
 /**
  * The KeyInput type is based on the key names from the UI Events KeyboardEvent key Values specification.
  * According to this specification, the keys for the numbers 0 through 9 are named 'Digit0' through 'Digit9'.
@@ -3397,6 +3406,10 @@ export class LoggedOutUser extends BaseUser {
       topicPageLessonTabSelector
     );
     await topicPageRevisionTabSelectorElement?.click();
+
+    await this.page.waitForSelector(topicPageRevisionTabContentSelector, {
+      visible: true,
+    });
   }
 
   /**
@@ -3493,6 +3506,10 @@ export class LoggedOutUser extends BaseUser {
     });
 
     await this.clickAndWaitForNavigation(nextLessonButton);
+
+    await this.page.waitForSelector(nextLessonButton, {
+      hidden: true,
+    });
   }
 
   /**
@@ -3501,6 +3518,8 @@ export class LoggedOutUser extends BaseUser {
   async returnToStoryFromLastState(): Promise<void> {
     await this.clickAndWaitForNavigation('Return to Story');
     showMessage('Returned to story from the last state.');
+
+    // TODO: Add post check
   }
 
   /**
@@ -3527,6 +3546,8 @@ export class LoggedOutUser extends BaseUser {
       );
       await searchResultsElements[lessonIndex].click();
       await this.waitForStaticAssetsToLoad();
+
+      await this.page.waitForSelector(lessonCardTitleSelector, {hidden: true});
       showMessage(`Lesson "${lessonTitle}" opened from search results.`);
     } catch (error) {
       const newError = new Error(
@@ -3592,6 +3613,9 @@ export class LoggedOutUser extends BaseUser {
    * @param {string} htmlString - The HTML string to check for.
    */
   async expectAttributionInHtmlSectionToBe(htmlString: string): Promise<void> {
+    await this.page.waitForSelector(attributionHtmlCodeSelector, {
+      visible: true,
+    });
     const attributionHtmlCodeElement = await this.page.$(
       attributionHtmlCodeSelector
     );
@@ -3635,8 +3659,15 @@ export class LoggedOutUser extends BaseUser {
    * Function to close the attribution modal.
    */
   async closeAttributionModal(): Promise<void> {
+    await this.page.waitForSelector(closeAttributionModalButton, {
+      visible: true,
+    });
     await this.clickOn(closeAttributionModalButton);
     showMessage('Attribution modal closed successfully');
+
+    await this.page.waitForSelector(closeAttributionModalButton, {
+      hidden: true,
+    });
   }
 
   /**
@@ -3648,6 +3679,9 @@ export class LoggedOutUser extends BaseUser {
     platform: string,
     explorationId: string | null
   ): Promise<void> {
+    await this.page.waitForSelector(shareExplorationButtonSelector, {
+      visible: true,
+    });
     await this.clickOn(shareExplorationButtonSelector);
 
     await this.waitForStaticAssetsToLoad();
@@ -3693,6 +3727,9 @@ export class LoggedOutUser extends BaseUser {
    * Function to embed a lesson.
    */
   async embedThisLesson(expectedCode: string): Promise<void> {
+    await this.page.waitForSelector(shareExplorationButtonSelector, {
+      visible: true,
+    });
     await this.clickOn(shareExplorationButtonSelector);
 
     await this.waitForStaticAssetsToLoad();
@@ -3711,6 +3748,8 @@ export class LoggedOutUser extends BaseUser {
       );
     }
     await this.clickOn('Close');
+
+    await this.page.waitForSelector(embedCodeSelector, {hidden: true});
   }
 
   /**
@@ -3749,6 +3788,7 @@ export class LoggedOutUser extends BaseUser {
       showMessage('Checkpoint modal found.');
       // Closing the checkpoint modal.
       await this.clickOn(closeLessonInfoTooltipSelector);
+      await this.page.waitForSelector(checkpointModalSelector, {hidden: true});
     } catch (error) {
       if (error instanceof puppeteer.errors.TimeoutError) {
         const newError = new Error('Checkpoint modal not found.');
@@ -3780,7 +3820,12 @@ export class LoggedOutUser extends BaseUser {
    * Function to navigate to the previous card in an exploration.
    */
   async goBackToPreviousCard(): Promise<void> {
+    await this.page.waitForSelector(previousCardButton, {visible: true});
     await this.clickOn(previousCardButton);
+
+    await this.page.waitForSelector(nextCardArrowButton, {
+      visible: true,
+    });
   }
 
   /**
@@ -3801,6 +3846,10 @@ export class LoggedOutUser extends BaseUser {
   async viewHint(): Promise<void> {
     await this.page.waitForSelector(hintButtonSelector);
     await this.clickOn(hintButtonSelector);
+
+    await this.page.waitForSelector(gotItButtonSelector, {
+      visible: true,
+    });
   }
 
   /**
@@ -3815,8 +3864,12 @@ export class LoggedOutUser extends BaseUser {
    * Simulates the action of viewing the solution by clicking on the view solution button and the continue to solution button.
    */
   async viewSolution(): Promise<void> {
+    await this.page.waitForSelector(viewSolutionButton, {visible: true});
     await this.clickOn(viewSolutionButton);
     await this.clickOn(continueToSolutionButton);
+    await this.page.waitForSelector(closeSolutionModalButton, {
+      visible: true,
+    });
   }
 
   /**
@@ -3835,7 +3888,27 @@ export class LoggedOutUser extends BaseUser {
    * This function clicks on the responses dropdown selector to display previous responses.
    */
   async viewPreviousResponses(): Promise<void> {
+    await this.page.waitForSelector(responsesDropdownSelector, {
+      visible: true,
+    });
+
+    const divCounts = await this.page.$$eval(
+      `${learnerViewCardSelector} div`,
+      divs => divs.length
+    );
+
     await this.clickOn(responsesDropdownSelector);
+
+    const newDivCounts = await this.page.$$eval(
+      `${learnerViewCardSelector} div`,
+      divs => divs.length
+    );
+
+    if (newDivCounts <= divCounts) {
+      throw new Error(
+        'No additional responses found. The dropdown did not expand.'
+      );
+    }
   }
 
   /**
@@ -3921,6 +3994,9 @@ export class LoggedOutUser extends BaseUser {
    * Opens the lesson info modal.
    */
   async openLessonInfoModal(): Promise<void> {
+    await this.page.waitForSelector(lessonInfoButton, {
+      visible: true,
+    });
     await this.clickOn(lessonInfoButton);
     await this.page.waitForSelector(lessonInfoCardSelector, {visible: true});
   }
@@ -3929,6 +4005,7 @@ export class LoggedOutUser extends BaseUser {
    * Closes the lesson info modal.
    */
   async closeLessonInfoModal(): Promise<void> {
+    await this.page.waitForSelector(closeLessonInfoButton, {visible: true});
     await this.clickOn(closeLessonInfoButton);
     await this.page.waitForSelector(lessonInfoCardSelector, {hidden: true});
   }
@@ -4002,7 +4079,12 @@ export class LoggedOutUser extends BaseUser {
    * Saves the progress.(To be used when save progress modal is opened.)
    */
   async saveProgress(): Promise<void> {
+    await this.page.waitForSelector(saveProgressButton, {visible: true});
     await this.clickOn(saveProgressButton);
+
+    await this.page.waitForSelector(signInBoxInSaveProressModalSelector, {
+      visible: true,
+    });
   }
 
   /**
@@ -4019,6 +4101,7 @@ export class LoggedOutUser extends BaseUser {
    * @param {string} expectedText - The expected validity info text.
    */
   async checkProgressUrlValidityInfo(expectedText: string): Promise<void> {
+    await this.page.waitForSelector(validityInfoTextSelector, {visible: true});
     const validityInfoText = await this.page.evaluate(selector => {
       const element = document.querySelector(selector);
       return element ? element.textContent.trim() : null;
@@ -4037,7 +4120,7 @@ export class LoggedOutUser extends BaseUser {
   async copyProgressUrl(): Promise<string> {
     try {
       // OverridePermissions is used to allow clipboard access.
-      const context = await this.page.browser().defaultBrowserContext();
+      const context = this.page.browser().defaultBrowserContext();
       await context.overridePermissions('http://localhost:8181', [
         'clipboard-read',
         'clipboard-write',
@@ -4204,6 +4287,9 @@ export class LoggedOutUser extends BaseUser {
     email: string,
     username: string
   ): Promise<void> {
+    await this.page.waitForSelector(loginButtonSelector, {
+      visible: true,
+    });
     await this.clickOn('Sign in');
     await this.type(testConstants.SignInDetails.inputField, email);
     await this.clickOn('Sign In');
@@ -4215,6 +4301,9 @@ export class LoggedOutUser extends BaseUser {
     );
     await this.clickOn(LABEL_FOR_SUBMIT_BUTTON);
     await this.page.waitForNavigation({waitUntil: 'networkidle0'});
+    await this.page.waitForSelector('button.e2e-test-register-user', {
+      hidden: true,
+    });
   }
 
   /**
@@ -4320,7 +4409,7 @@ export class LoggedOutUser extends BaseUser {
    */
   async expectToBeOnPage(expectedPage: string): Promise<void> {
     await this.waitForStaticAssetsToLoad();
-    const url = await this.page.url();
+    const url = this.page.url();
 
     // Replace spaces in the expectedPage with hyphens.
     const expectedPageInUrl = expectedPage.replace(/\s+/g, '-');
@@ -4341,7 +4430,7 @@ export class LoggedOutUser extends BaseUser {
     await this.simulateKeyboardShortcut(shortcut);
 
     // Determine the expected element to be focused.
-    let expectedFocusedElement;
+    let expectedFocusedElement: puppeteer.ElementHandle | null = null;
     switch (shortcut) {
       case '/':
         expectedFocusedElement = await this.page.$(searchInputSelector);
@@ -4387,9 +4476,12 @@ export class LoggedOutUser extends BaseUser {
    * @param {string} languageCode - The code of the language to change to.
    */
   async changeLessonLanguage(languageCode: string): Promise<void> {
+    await this.page.waitForSelector(lessonLanguageSelector, {visible: true});
     await this.select(lessonLanguageSelector, languageCode);
     await this.waitForNetworkIdle();
     await this.waitForPageToFullyLoad();
+
+    // TODO: Add post check
   }
 
   /**
@@ -4397,12 +4489,15 @@ export class LoggedOutUser extends BaseUser {
    */
   async startVoiceover(): Promise<void> {
     await this.waitForPageToFullyLoad();
+    await this.page.waitForSelector(voiceoverDropdown, {
+      visible: true,
+    });
     const voiceoverDropdownElement = await this.page.$(voiceoverDropdown);
     if (voiceoverDropdownElement) {
       await this.clickOn(voiceoverDropdown);
     }
     await this.clickOn(playVoiceoverButton);
-    await this.page.waitForSelector(pauseVoiceoverButton);
+    await this.page.waitForSelector(pauseVoiceoverButton, {visible: true});
   }
 
   /**
@@ -4418,7 +4513,10 @@ export class LoggedOutUser extends BaseUser {
    * Pauses the voiceover by clicking on the pause button.
    */
   async pauseVoiceover(): Promise<void> {
+    await this.page.waitForSelector(pauseVoiceoverButton, {visible: true});
     await this.clickOn(pauseVoiceoverButton);
+    await this.page.waitForSelector(playVoiceoverButton, {visible: true});
+    showMessage('Voiceover paused successfully.');
   }
 
   /**
