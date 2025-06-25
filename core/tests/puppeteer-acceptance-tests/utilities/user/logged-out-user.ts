@@ -20,6 +20,7 @@ import puppeteer from 'puppeteer';
 import {BaseUser} from '../common/puppeteer-utils';
 import testConstants from '../common/test-constants';
 import {showMessage} from '../common/show-message';
+import {YouTubePlayer} from '../common/youtube-player';
 
 const aboutUrl = testConstants.URLs.About;
 const androidUrl = testConstants.URLs.Android;
@@ -422,6 +423,30 @@ const collapsibleRTEHeaderSelector = 'e2e-test-collapsible-heading';
 const collapsibleRTEContentSelector = '.e2e-test-collapsible-content';
 
 const returnToLibraryButtonSelector = '.e2e-test-exploration-return-to-library';
+
+// Partnership Page
+const partnershipsHeadingSelector = '.e2e-test-partnership-heading';
+const partnershipPageSubheadingsSelector =
+  '.e2e-test-partnerships-page .oppia-partnerships-h3';
+const partneringWithUsImageSelector = '.e2e-test-partnering-with-oppia-image';
+const partnershipYoutubeVideoIFrameSelector =
+  '.e2e-test-partnership-youtube-video-iframe';
+
+// About Us Page Selectors
+const aboutUsHeadingSelector = '.e2e-test-about-us-title';
+const aboutUsSubheadingSelector = '.e2e-test-about-page-title-new';
+const exploreLessonsButtonInAboutUsPageSelector =
+  '.e2e-test-about-page-explore-lessons-button';
+const androidAppButtonInAboutUsPageSelector =
+  '.e2e-test-about-page-android-button';
+const partnershipStoryBoardSelector = '.oppia-about-partnerships-card';
+const impactStatsTitleSelector = '.e2e-test-about-oppia-impact-stat-title';
+
+// Donation Page
+const ourLearnersSectionSelector = '.e2e-test-donate-our-learners';
+const ourNetworkSectionSelector = '.e2e-test-donate-highlights';
+const donationHeadingSelector = '.e2e-test-donate-heading';
+const readyToMakeDonationSelector = '.e2e-test-ready-to-donate-title';
 
 /**
  * The KeyInput type is based on the key names from the UI Events KeyboardEvent key Values specification.
@@ -2135,7 +2160,7 @@ export class LoggedOutUser extends BaseUser {
    * Function to click the Read more stories button in the Partnerships page
    * and check if it opens the blog page.
    */
-  async clickReadMoreStoriesButtonInPartnershipsPage(): Promise<void> {
+  async clickReadMoreStoriesButtonInPartnershipsPageAndVerifyNavigation(): Promise<void> {
     await this.clickButtonToNavigateToNewPage(
       readMoreStoriesButtonInPartnershipsPage,
       'Read more stories button',
@@ -4806,6 +4831,218 @@ export class LoggedOutUser extends BaseUser {
 
     await this.clickOn(navbarGetInvolvedTab);
     await this.isElementVisible(navbarGetInvolvedDropdownContainerSelector);
+  }
+
+  /**
+   * Checks if the text content of an element matches the expected value.
+   * @param selector - The CSS selector to find the element.
+   * @param value - The expected text content value.
+   * @param exactMatch - If true, checks for exact match. If false, checks if value is contained in text content.
+   * @returns {Promise<void>} - A promise that resolves when the text content is checked.
+   */
+  async expectTextContentInElementWithSelectorToBe(
+    selector: string,
+    value: string,
+    exactMatch: boolean = false
+  ): Promise<void> {
+    await this.isElementVisible(selector);
+
+    const actualTextContent = await this.page.$eval(
+      selector,
+      element => (element as HTMLElement).textContent
+    );
+
+    if (!exactMatch && !actualTextContent?.includes(value)) {
+      throw new Error(
+        `Expected text content to contain ${value}, but found ${actualTextContent}`
+      );
+    } else if (exactMatch && actualTextContent !== value) {
+      throw new Error(
+        `Expected text content to be ${value}, but found ${actualTextContent}`
+      );
+    }
+  }
+
+  async expectAnyElementWithSelectorToHaveTextContent(
+    selector: string,
+    value: string
+  ) {
+    const values = await this.page.$$eval(selector, elements =>
+      elements.map(element => (element as HTMLElement).textContent)
+    );
+
+    if (!values.includes(value)) {
+      throw new Error(
+        `Expected text content to contain ${value}, but found ${values.join(',')}`
+      );
+    }
+  }
+
+  /**
+   * Checks if heading in partnership matches the expected heading.
+   * @param heading - The expected heading.
+   * @returns {Promise<void>} - A promise that resolves when the heading is checked.
+   */
+  async expectPartnershipHeadingToBe(heading: string): Promise<void> {
+    try {
+      await this.expectTextContentInElementWithSelectorToBe(
+        partnershipsHeadingSelector,
+        heading,
+        true
+      );
+    } catch (error) {
+      throw new Error(
+        `Expected heading to be ${heading}, but found got error: ${error}`
+      );
+    }
+  }
+
+  /**
+   * Checks if the partner with us button is visible at the top of the partnerships page.
+   * @returns {Promise<void>} - A promise that resolves when the button is checked.
+   */
+  async expectPartnerWithUsButtonIsVisible(): Promise<void> {
+    await this.isElementVisible(partnerWithUsButtonAtTheTopOfPartnershipsPage);
+  }
+
+  /**
+   * Checks if the subheadings in the partnerships page contain the expected subheading.
+   * @param subheading - The expected subheading.
+   * @returns {Promise<void>} - A promise that resolves when the subheading is checked.
+   */
+  async expectSubheadingsInPartnershipPageToContain(
+    subheading: string
+  ): Promise<void> {
+    const subheadings = await this.page.$$eval(
+      partnershipPageSubheadingsSelector,
+      elements => elements.map(element => (element as HTMLElement).textContent)
+    );
+
+    if (subheadings.includes(subheading)) {
+      showMessage(`Subheading ${subheading} is present.`);
+    } else {
+      throw new Error(
+        `Subheading "${subheading}" is not present. Subheading present: ${subheadings.join(', ')}`
+      );
+    }
+  }
+
+  /**
+   * Checks if the partnerships page contains the expected image.
+   * @returns {Promise<void>} - A promise that resolves when the image is checked.
+   */
+  async expectPartneringWithUsImageToBePresent(): Promise<void> {
+    await this.isElementVisible(partneringWithUsImageSelector);
+  }
+
+  /**
+   * Checks if the partnerships page contains the expected image.
+   * @returns {Promise<void>} - A promise that resolves when the image is checked.
+   */
+  async expectYouTubeVideoInPartnershipPageToBePlayabe(): Promise<void> {
+    await this.isElementVisible(partnershipYoutubeVideoIFrameSelector);
+
+    const youtubePlayerIFrameElement = await this.page.$(
+      partnershipYoutubeVideoIFrameSelector
+    );
+    const youtubePlayer = new YouTubePlayer(youtubePlayerIFrameElement);
+
+    await youtubePlayer.expectPlayerToBeInReadyMode();
+    await youtubePlayer.playVidioForFirstTime();
+    await youtubePlayer.expectPauseButtonToBeVisible();
+    await youtubePlayer.clickOnPlayPauseButton();
+    await youtubePlayer.expectPlayButtonToBeVisible();
+  }
+
+  /**
+   * Checks if heading in about us page matches the expected heading.
+   * @param heading - The expected heading.
+   */
+  async expectAboutUsPageHeadingToBe(heading: string): Promise<void> {
+    await this.expectTextContentInElementWithSelectorToBe(
+      aboutUsHeadingSelector,
+      heading
+    );
+  }
+
+  async expectSubheadingInAboutUsPageToContain(
+    subheading: string
+  ): Promise<void> {
+    const subheadings = await this.page.$$eval(
+      aboutUsSubheadingSelector,
+      elements => elements.map(element => (element as HTMLElement).textContent)
+    );
+
+    if (subheadings.includes(subheading)) {
+      showMessage(`Subheading ${subheading} is present.`);
+    } else {
+      throw new Error(
+        `Subheading "${subheading}" is not present. Subheading present: ${subheadings.join(', ')}`
+      );
+    }
+  }
+
+  async expectSectionGoalsInAboutPageToContain(sectionGoal: string) {
+    await this.expectAnyElementWithSelectorToHaveTextContent(
+      '.oppia-about-foundation-section-goal-title',
+      sectionGoal
+    );
+  }
+
+  async expectExploreLessonsButtonInAboutPageToBePresent(): Promise<void> {
+    await this.isElementVisible(exploreLessonsButtonInAboutUsPageSelector);
+  }
+
+  async expectAndroidAppButtonInAboutPageToBePresent(): Promise<void> {
+    await this.isElementVisible(androidAppButtonInAboutUsPageSelector);
+  }
+
+  async expectPartnershipStoryBoardsToBe(n: number) {
+    const storyBoards = await this.page.$$eval(
+      partnershipStoryBoardSelector,
+      elements => elements.map(element => (element as HTMLElement).textContent)
+    );
+
+    if (storyBoards.length != n) {
+      throw new Error(
+        `Expected ${n} story boards, but found ${storyBoards.length} (${storyBoards.join(', ')})`
+      );
+    }
+  }
+
+  async expectImpactStatsTitlesToBe(n: number): Promise<void> {
+    const impactStats = await this.page.$$eval(
+      impactStatsTitleSelector,
+      elements => elements.map(element => (element as HTMLElement).textContent)
+    );
+
+    if (impactStats.length != n) {
+      throw new Error(
+        `Expected ${n} impact stats, but found ${impactStats.length} (${impactStats.join(', ')})`
+      );
+    }
+  }
+
+  async expectOurImpactSectionInDonationPageToBePresent(): Promise<void> {
+    await this.isElementVisible(ourNetworkSectionSelector);
+  }
+
+  async expectOurLearnersSectionInDonationPageToBePresent(): Promise<void> {
+    await this.isElementVisible(ourLearnersSectionSelector);
+  }
+
+  async expectDonationPageHeadingToBe(heading: string): Promise<void> {
+    await this.expectTextContentInElementWithSelectorToBe(
+      donationHeadingSelector,
+      heading
+    );
+  }
+
+  async expectReadyToMakeAnImpactToBePresent(): Promise<void> {
+    await this.expectTextContentInElementWithSelectorToBe(
+      readyToMakeDonationSelector,
+      ' Ready to make an impact? '
+    );
   }
 }
 
