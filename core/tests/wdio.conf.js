@@ -1,3 +1,4 @@
+const video = require('wdio-video-reporter');
 require('dotenv').config();
 var FirebaseAdmin = require('firebase-admin');
 var path = require('path');
@@ -262,7 +263,11 @@ exports.config = {
     ['spec', {
       showPreface: false,
       realtimeReporting: true,
-    }]
+    }],
+    [video, {
+      saveAllVideos: true,       // If true, also saves videos for successful test cases
+      videoSlowdownMultiplier: 1, // Higher to get slower videos, lower for faster videos [Value 1-100]
+    }],
   ],
 
   isMobile: false,
@@ -320,7 +325,7 @@ exports.config = {
     */
   beforeTest: function(test, context) {
     if (// eslint-disable-next-line eqeqeq
-    process.env.VIDEO_RECORDING_IS_ENABLED == 1) {
+    process.env.VIDEO_RECORDING_IS_ENABLED === '1') {
       let ffmpegArgs = [
         '-y',
         '-r', '30',
@@ -336,10 +341,12 @@ exports.config = {
       const uniqueString = Math.random().toString(36).substring(2, 8);
       var name = uniqueString + '.mp4';
       var dirPath = path.resolve(
-        '__dirname', '..', '..', 'webdriverio-video/');
+        __dirname, '..', '..', 'webdriverio-video/');
       try {
         fs.mkdirSync(dirPath, { recursive: true });
-      } catch (err) {}
+      } catch (err) {
+        console.log('can\'t create directory')
+      }
       videoPath = path.resolve(dirPath, name);
       ffmpegArgs.push(videoPath);
       ffmpegProcess = childProcess.spawn('ffmpeg', ffmpegArgs);
@@ -374,7 +381,7 @@ exports.config = {
   afterTest: async function(
       test, context, { error, result, duration, passed, retries }) {
     if (// eslint-disable-next-line eqeqeq
-    process.env.VIDEO_RECORDING_IS_ENABLED == 1) {
+    process.env.VIDEO_RECORDING_IS_ENABLED === '1') {
       ffmpegProcess.kill();
       if (passed === true && !ALL_VIDEOS && fs.existsSync(videoPath)) {
         fs.unlinkSync(videoPath);
