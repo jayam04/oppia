@@ -102,11 +102,11 @@ var logout = async function () {
     },
     async () => {
       var splashPage = $('.e2e-test-splash-page');
+      await waitFor.pageToFullyLoad();
       await waitFor.visibilityOf(
         splashPage,
         'Splash page takes too long to appear'
       );
-      await waitFor.pageToFullyLoad();
     }
   );
 };
