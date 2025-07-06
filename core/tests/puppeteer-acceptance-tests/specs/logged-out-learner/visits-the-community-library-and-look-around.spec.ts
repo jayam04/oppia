@@ -23,7 +23,6 @@
  * CL.LP. Learner visits the community library and looks around
  */
 
-import {lookup} from 'dns';
 import testConstants from '../../utilities/common/test-constants';
 import {UserFactory} from '../../utilities/common/user-factory';
 import {ExplorationEditor} from '../../utilities/user/exploration-editor';
