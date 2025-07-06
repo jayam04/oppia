@@ -23,18 +23,74 @@
  * CL.LP. Learner visits the community library and looks around
  */
 
+import {lookup} from 'dns';
+import testConstants from '../../utilities/common/test-constants';
 import {UserFactory} from '../../utilities/common/user-factory';
+import {ExplorationEditor} from '../../utilities/user/exploration-editor';
 import {LoggedOutUser} from '../../utilities/user/logged-out-user';
+import {ReleaseCoordinator} from '../../utilities/user/release-coordinator';
+
+const ROLES = testConstants.Roles;
 
 describe('Logged-Out Learner', function () {
   let loggedOutLearner: LoggedOutUser;
+  let explorationEditor: ExplorationEditor;
+  let releaseCoordinator: ReleaseCoordinator;
 
   beforeAll(async function () {
     loggedOutLearner = await UserFactory.createLoggedOutUser();
+
+    explorationEditor = await UserFactory.createNewUser(
+      'explorationEditor',
+      'exploration_editor@example.com'
+    );
+
+    releaseCoordinator = await UserFactory.createNewUser(
+      'releaseCoordinator',
+      'release_coordinator@example.com',
+      [ROLES.RELEASE_COORDINATOR]
+    );
+
+    // Create a new explorations.
+    await explorationEditor.createAndPublishExplorationWithCards(
+      'Fractions',
+      'Mathematics'
+    );
+    await explorationEditor.createAndPublishExplorationWithCards(
+      'Algebra',
+      'Mathematics'
+    );
+    await explorationEditor.createAndPublishExplorationWithCards(
+      'Laws of Motion',
+      'Science'
+    );
   });
 
-  it("should be able to learn about Oppia's partnership program", async function () {
-    // TODO: Complete
+  it('should be able to discover the community library', async function () {
+    await loggedOutLearner.navigateToCommunityLibraryUsingNavbar();
+    await loggedOutLearner.expectCommunityLibraryHeadingToBePresent(
+      'Imagine what you could learn today...'
+    );
+  });
+
+  it('should be able to look at different categories in community library', async function () {
+    // TODO: Not all the group headers are present in the community library page,
+    // maybe can be done by some user action.
+    await loggedOutLearner.expectCommunityLibraryGroupHeaderToContain([
+      'Mathematics',
+      'Science',
+    ]);
+
+    await loggedOutLearner.expectSearchResultsToContain([
+      'Fractions',
+      'Algebra',
+      'Laws of Motion',
+    ]);
+    await loggedOutLearner.filterLessonsByCategories(['Mathematics']);
+    await loggedOutLearner.expectSearchResultsToContain([
+      'Fractions',
+      'Algebra',
+    ]);
   });
 
   afterAll(async function () {

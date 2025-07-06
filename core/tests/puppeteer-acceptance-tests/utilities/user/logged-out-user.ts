@@ -431,6 +431,9 @@ const communityLibraryLinkInNavbarSelector =
 const communityLibraryContainerSelector = '.e2e-test-library-container';
 const communityLibraryLinkInNavMenuSelector = '.e2e-mobile-test-library-link';
 
+const communityLibraryHeading = '.e2e-test-library-main-header';
+const communityLibraryGroupHeader = '.e2e-test-library-group-header';
+
 /**
  * The KeyInput type is based on the key names from the UI Events KeyboardEvent key Values specification.
  * According to this specification, the keys for the numbers 0 through 9 are named 'Digit0' through 'Digit9'.
@@ -5049,6 +5052,62 @@ export class LoggedOutUser extends BaseUser {
         `Expected voiceover bar to be ${
           visible ? 'visible' : 'hidden'
         }, but it was ${isVisible ? 'visible' : 'hidden'}`
+      );
+    }
+  }
+
+  /**
+   * Function to verify the community library heading is present.
+   * @param {string} heading - The heading to verify.
+   */
+  async expectCommunityLibraryHeadingToBePresent(
+    heading: string
+  ): Promise<void> {
+    await this.page.waitForSelector(communityLibraryHeading, {
+      visible: true,
+      timeout: 5000,
+    });
+
+    const communityLibraryHeadingText = await this.page.$eval(
+      communityLibraryHeading,
+      el => el.textContent
+    );
+
+    if (communityLibraryHeadingText?.trim() !== heading) {
+      throw new Error(
+        `Expected community library heading to be ${heading}, but found ${communityLibraryHeadingText}`
+      );
+    }
+
+    showMessage(`Success: Community library heading is ${heading}.`);
+  }
+
+  /**
+   * Function to verify the community library group header is present.
+   * @param {string[]} groupHeaders - The group headers to verify.
+   */
+  async expectCommunityLibraryGroupHeaderToContain(groupHeaders: string[]) {
+    await this.page.waitForSelector(communityLibraryGroupHeader, {
+      visible: true,
+    });
+
+    const communityLibraryGroupHeaderText = await this.page.$$eval(
+      communityLibraryGroupHeader,
+      el => el.map(el => el.textContent)
+    );
+
+    for (const groupHeader of groupHeaders) {
+      if (
+        communityLibraryGroupHeaderText?.some(el =>
+          el?.trim().includes(groupHeader)
+        ) === false
+      ) {
+        throw new Error(
+          `Failed: Community library group header does not contain ${groupHeader}.\nActual: ${communityLibraryGroupHeaderText}`
+        );
+      }
+      showMessage(
+        `Success: Community library group header contains ${groupHeader}.`
       );
     }
   }
