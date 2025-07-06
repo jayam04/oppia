@@ -391,6 +391,14 @@
     {
       "name": "logged-out-learner/give-feedback-on-the-lesson-from-the-lesson-player",
       "module": "core/tests/puppeteer-acceptance-tests/specs/logged-out-learner/give-feedback-on-the-lesson-from-the-lesson-player.spec.ts"
+    },
+    {
+      "name": "logged-out-learner/discover-the-website-and-navigate-to-math-classroom",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/logged-out-learner/discover-the-website-and-navigate-to-math-classroom.spec.ts"
+    },
+    {
+      "name": "logged-out-learner/visits-the-community-library-and-look-around",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/logged-out-learner/visits-the-community-library-and-look-around.spec.ts"
     }
   ],
   "docker_suites": []
