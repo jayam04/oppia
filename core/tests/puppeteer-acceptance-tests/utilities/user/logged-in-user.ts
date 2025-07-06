@@ -177,6 +177,7 @@ const explorationControlsSettingsDropdown =
 const tagsField = '.e2e-test-chip-list-tags';
 const explorationSummaryTileTitleSelector = '.e2e-test-exp-summary-tile-title';
 const errorSavingExplorationModal = '.e2e-test-discard-lost-changes-button';
+const greetingSelector = '.e2e-learner-dashboard-greeting';
 
 // Auth Pages selectors.
 const loginPage = '.e2e-test-login-page';
@@ -219,6 +220,26 @@ const explorationSuccessfullyFlaggedMessage =
 const feedbackUpdatesMainContentContainer =
   '.e2e-test-feedback-updates-main-content-container';
 
+const navbarLearnTab = 'a.e2e-test-navbar-learn-menu';
+const navbarLearnDropdownContainerSelector =
+  '.e2e-test-classroom-oppia-list-item';
+const navbarAboutDropdownConatinaerSelector = '.e2e-test-about-oppia-list-item';
+const navbarGetInvolvedDropdownContainerSelector =
+  '.e2e-test-navbar-get-involved-menu';
+const navbarAboutTab = 'a.e2e-test-navbar-about-menu';
+const navbarGetInvolvedTab = 'a.e2e-test-navbar-get-involved-menu';
+const mobileNavbarOpenSidebarButton = 'a.e2e-mobile-test-navbar-button';
+const mobileAboutMenuDropdownSelector =
+  '.e2e-mobile-test-sidebar-expand-about-menu';
+const mobileAboutPageButtonSelector = '.e2e-mobile-test-sidebar-about-button';
+const mobileGetInvolvedDropdownSelector =
+  '.e2e-mobile-test-sidebar-expand-get-involved-menu';
+const mobileGetInvolvedMenuContainerSelector =
+  '.e2e-mobile-test-sidebar-get-involved-menu';
+const mobileLearnDropdownSelector = '.e2e-mobile-test-learn';
+const mobileLearnSubMenuSelector = '.e2e-test-mobile-learn-submenu';
+
+const removeFromPlayLaterInLibrarySelector = '.e2e-test-remove-from-play-later';
 export class LoggedInUser extends BaseUser {
   /**
    * Function for navigating to the profile page for a given username.
@@ -502,6 +523,17 @@ export class LoggedInUser extends BaseUser {
    */
   async playExploration(explorationId: string | null): Promise<void> {
     await this.goto(`${baseUrl}/explore/${explorationId as string}`);
+  }
+
+  /**
+   * Check if rating stars are displayed.
+   */
+  async expectRatingStarsToBeVisible(): Promise<void> {
+    await this.page.waitForSelector(ratingsHeaderSelector);
+    const ratingStars = await this.page.$$(ratingStarSelector);
+    if (ratingStars.length !== 5) {
+      throw new Error('Rating stars are not visible.');
+    }
   }
 
   /**
@@ -806,6 +838,68 @@ export class LoggedInUser extends BaseUser {
       newError.stack = error.stack;
       throw newError;
     }
+  }
+
+  async removeLessonFromPlayLaterInlibrary(lessonTitle: string): Promise<void> {
+    await this.waitForPageToFullyLoad();
+    const isMobileViewport = this.isViewportAtMobileWidth();
+    const lessonCardTitleSelector = isMobileViewport
+      ? mobileLessonCardTitleSelector
+      : desktopLessonCardTitleSelector;
+
+    await this.page.waitForSelector(lessonCardTitleSelector);
+    const lessonTitles = await this.page.$$eval(
+      lessonCardTitleSelector,
+      elements => elements.map(el => el.textContent?.trim())
+    );
+
+    const lessonIndex = lessonTitles.indexOf(lessonTitle);
+
+    if (lessonIndex === -1) {
+      throw new Error(`Lesson "${lessonTitle}" not found in search results.`);
+    }
+
+    const lessonSelector = `${lessonCardTitleSelector}:nth-child(${lessonIndex + 1})`;
+    const tooltipSelector = `${lessonSelector} ${removeFromPlayLaterInLibrarySelector}`;
+
+    await this.clickOn(tooltipSelector);
+    await this.clickOn('Remove');
+  }
+
+  /**
+   * Expects the tooltip text of the 'Play Later' icon for the given lesson title to match the expected tooltip text.
+   * @param {string} lessonTitle - The title of the lesson to check the 'Play Later' icon tooltip text for.
+   * @param {string} expectedTooltip - The expected tooltip text for the 'Play Later' icon.
+   */
+  async expectPlayLaterIconToolTipToBe(
+    lessonTitle: string,
+    expectedTooltip: string
+  ): Promise<void> {
+    await this.waitForPageToFullyLoad();
+    const isMobileViewport = this.isViewportAtMobileWidth();
+    const lessonCardTitleSelector = isMobileViewport
+      ? mobileLessonCardTitleSelector
+      : desktopLessonCardTitleSelector;
+
+    await this.page.waitForSelector(lessonCardTitleSelector);
+    const lessonTitles = await this.page.$$eval(
+      lessonCardTitleSelector,
+      elements => elements.map(el => el.textContent?.trim())
+    );
+
+    const lessonIndex = lessonTitles.indexOf(lessonTitle);
+
+    if (lessonIndex === -1) {
+      throw new Error(`Lesson "${lessonTitle}" not found in search results.`);
+    }
+
+    const lessonSelector = `${lessonCardTitleSelector}:nth-child(${lessonIndex + 1})`;
+    const tooltipSelector = `${lessonSelector} ${removeFromPlayLaterInLibrarySelector}`;
+
+    await this.page.waitForSelector(removeFromPlayLaterInLibrarySelector, {
+      visible: true,
+    });
+    await this.expectToolTipTextToBe(tooltipSelector, expectedTooltip);
   }
 
   /**
@@ -2160,6 +2254,86 @@ export class LoggedInUser extends BaseUser {
     await this.page.waitForSelector(feedbackTextareaSelector, {
       hidden: true,
     });
+  }
+
+  /**
+   * Checks if Learner is on the learner dashboard page.
+   */
+  expectToBeOnLearnerDashboardPage(): void {
+    expect(this.page.url()).toBe(`${baseUrl}/learner-dashboard`);
+  }
+
+  /**
+   * Checks if greeting has name of the user
+   */
+  async expectGreetingToHaveNameOfUser(userName: string): Promise<void> {
+    const greetingElement = await this.page.$(greetingSelector);
+    const greetingText = await this.page.evaluate(
+      el => el.textContent,
+      greetingElement
+    );
+    expect(greetingText).toContain(userName);
+  }
+
+  /**
+   * Checks if all dropdowns in deskop navbar open properly.
+   */
+  async expectDropdownsInDesktopNavbarToWorkProperly(): Promise<void> {
+    if (this.isViewportAtMobileWidth()) {
+      showMessage('Skipped desktop dropdowns check in mobile view.');
+      return;
+    }
+    await this.clickOn(navbarLearnTab);
+    await this.isElementVisible(navbarLearnDropdownContainerSelector);
+
+    await this.clickOn(navbarAboutTab);
+    await this.isElementVisible(navbarAboutDropdownConatinaerSelector);
+
+    await this.clickOn(navbarGetInvolvedTab);
+    await this.isElementVisible(navbarGetInvolvedDropdownContainerSelector);
+  }
+
+  /**
+   * Checks if all dropdowns in mobile navbar open properly.
+   */
+  async expectDropdownsInMobileNavMenuToWorkProperly(): Promise<void> {
+    if (!this.isViewportAtMobileWidth()) {
+      showMessage('Skipped mobile dropdowns check in desktop view.');
+      return;
+    }
+
+    await this.clickOn(mobileNavbarOpenSidebarButton);
+    // Learn Dropdown.
+    await this.isElementVisible(mobileLearnDropdownSelector);
+    await this.isElementVisible(mobileLearnSubMenuSelector);
+    await this.clickOn(mobileLearnDropdownSelector);
+    await this.isElementVisible(mobileLearnSubMenuSelector, false);
+    await this.clickOn(mobileLearnDropdownSelector);
+
+    // About Dropdown.
+    await this.isElementVisible(mobileAboutMenuDropdownSelector);
+    await this.isElementVisible(mobileAboutPageButtonSelector, false);
+    await this.clickOn(mobileAboutMenuDropdownSelector);
+    await this.isElementVisible(mobileAboutPageButtonSelector);
+    await this.clickOn(mobileAboutMenuDropdownSelector);
+
+    // Get Involved Dropdown.
+    await this.isElementVisible(mobileGetInvolvedDropdownSelector);
+    await this.isElementVisible(mobileGetInvolvedMenuContainerSelector, false);
+    await this.clickOn(mobileGetInvolvedDropdownSelector);
+    await this.isElementVisible(mobileGetInvolvedMenuContainerSelector);
+    await this.clickOn(mobileGetInvolvedDropdownSelector);
+
+    // Close Navmenu.
+    await this.clickOn(mobileNavbarOpenSidebarButton);
+  }
+
+  /**
+   * Checks if navbar in mobile and desktop view open properly.
+   */
+  async expectNavBarInMobileInDesktopToWorkProperly(): Promise<void> {
+    await this.expectDropdownsInDesktopNavbarToWorkProperly();
+    await this.expectDropdownsInMobileNavMenuToWorkProperly();
   }
 }
 
