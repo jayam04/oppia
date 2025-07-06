@@ -91,6 +91,10 @@ describe('Logged-Out Learner', function () {
       'Fractions',
       'Algebra',
     ]);
+    await loggedOutLearner.expectSearchResultsToContain(
+      ['Laws of Motion'],
+      false
+    );
   });
 
   afterAll(async function () {

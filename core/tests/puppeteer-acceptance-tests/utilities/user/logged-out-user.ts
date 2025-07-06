@@ -3209,43 +3209,28 @@ export class LoggedOutUser extends BaseUser {
   /**
    * Checks if the search results contain a specific result.
    * @param {string[]} searchResultsExpected - The search result to check for.
+   * @param {boolean} present - Whether the search results should be present or not.
    */
   async expectSearchResultsToContain(
-    searchResultsExpected: string[]
+    searchResultsExpected: string[],
+    present: boolean = true
   ): Promise<void> {
-    try {
-      if (searchResultsExpected.length === 0) {
-        await this.waitForPageToFullyLoad();
-        const searchResultsElements = await this.page.$$(
-          lessonCardTitleSelector
-        );
-        if (searchResultsElements.length !== 0) {
-          throw new Error('No search results expected, but some were found.');
-        }
-      } else {
-        await this.page.waitForSelector(lessonCardTitleSelector);
-        const searchResultsElements = await this.page.$$(
-          lessonCardTitleSelector
-        );
-        const searchResults = await Promise.all(
-          searchResultsElements.map(result =>
-            this.page.evaluate(el => el.textContent.trim(), result)
-          )
-        );
+    await this.waitForPageToFullyLoad();
+    const searchResults = await this.page.$$eval(
+      lessonCardTitleSelector,
+      elements => elements.map(element => element.textContent)
+    );
 
-        for (const resultExpected of searchResultsExpected) {
-          if (!searchResults.includes(resultExpected)) {
-            throw new Error(
-              `Search result "${resultExpected}" not found in search results.`
-            );
-          }
-        }
-        showMessage('All expected search results found in search results.');
+    for (const searchResultExpected of searchResultsExpected) {
+      if (searchResults.includes(searchResultExpected) === present) {
+        showMessage(
+          `Success: Search result "${searchResultExpected}" is ${present ? 'present' : 'not present'}.`
+        );
+      } else {
+        throw new Error(
+          `Expected search result "${searchResultExpected}" to be ${present ? 'present' : 'not present'}, but it was ${present ? 'not ' : ''}found.`
+        );
       }
-    } catch (error) {
-      const newError = new Error(`Failed to check search results: ${error}`);
-      newError.stack = error.stack;
-      throw newError;
     }
   }
 
