@@ -307,6 +307,7 @@ const languageFilterDropdownToggler =
 const lessonCardTitleSelector = '.e2e-test-exploration-tile-title';
 const explorationTitleSelector = '.e2e-test-exp-summary-tile-title';
 const explorationRatingSelector = '.e2e-test-exp-summary-tile-rating';
+const explorationViewsSelector = '.e2e-test-exp-summary-tile-views';
 const desktopStoryTitleSelector = '.e2e-test-story-title-in-topic-page';
 const mobileStoryTitleSelector = '.e2e-test-mobile-story-title';
 const chapterTitleSelector = '.e2e-test-chapter-title';
@@ -3325,6 +3326,40 @@ export class LoggedOutUser extends BaseUser {
       );
       newError.stack = error.stack;
       throw newError;
+    }
+  }
+
+  /**
+   * Checks if the views of a lesson card matches the expected views.
+   * @param {number} expectedViews - The expected views of the card.
+   * @param {string} explorationName - The name of the exploration.
+   */
+  async expectLessonViewsToBe(
+    expectedViews: number,
+    explorationName: string
+  ): Promise<void> {
+    await this.page.waitForSelector(lessonCardSelector);
+    const cards = await this.page.$$(lessonCardSelector);
+    for (const card of cards) {
+      await card.waitForSelector(lessonCardTitleSelector);
+      const titleElement = await card.$(lessonCardTitleSelector);
+      const titleText = await this.page.evaluate(
+        el => el.textContent.trim(),
+        titleElement
+      );
+      if (titleText === explorationName) {
+        await card.waitForSelector(explorationViewsSelector);
+        const views = await card.$eval(explorationViewsSelector, el =>
+          parseInt(el?.textContent?.trim() ?? '0', 10)
+        );
+
+        if (views !== expectedViews) {
+          throw new Error(
+            `Expected views to be ${expectedViews}, but found ${views}`
+          );
+        }
+        return;
+      }
     }
   }
 
