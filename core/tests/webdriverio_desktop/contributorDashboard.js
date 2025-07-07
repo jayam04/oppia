@@ -247,6 +247,9 @@ describe('Contributor dashboard page', function () {
     await browser.execute(function () {
       window.onbeforeunload = null;
     });
+    if (await browser.isAlertOpen()) {
+      await browser.acceptAlert();
+    }
     await users.logout();
   });
 
