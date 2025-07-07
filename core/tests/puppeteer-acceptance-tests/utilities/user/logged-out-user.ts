@@ -407,6 +407,15 @@ const blogPostTitleContainerSelector =
 const blogPostContentSelector = '.e2e-test-blog-post-content';
 const blogPostTitleSelector = '.e2e-test-blog-post-tile-title';
 
+// Common Selectors.
+const devModeLabelSelector = '.e2e-test-dev-mode';
+
+// Home Page Selectors.
+const homePageHeadingSelector =
+  '.e2e-test-splash-page .e2e-test-home-page-title';
+const browseLessonButtonSelector =
+  '.e2e-test-splash-page .e2e-test-browse-lessons-buttons';
+
 // Topic Viewer Page Selectors.
 const topicPageRevisionTabContentSelector =
   '.e2e-test-topic-viewer-revision-tab';
@@ -5130,6 +5139,45 @@ export class LoggedOutUser extends BaseUser {
         `Success: Community library group header contains ${groupHeader}.`
       );
     }
+  }
+
+  // ================================================================================
+  // Common
+  // ================================================================================
+
+  /**
+   * Function to verify the dev mode label is visible or not.
+   * @param {boolean} visible - Whether the dev mode label should be visible or not.
+   */
+  async expectDevModeLabelToBeVisible(visible: boolean = true): Promise<void> {
+    await this.page.waitForSelector(devModeLabelSelector, {
+      visible: visible,
+    });
+  }
+
+  // ================================================================================
+  // Home Page
+  // ================================================================================
+
+  /**
+   * Function to click the Browse Lessons button on the home page.
+   */
+  async clickBrowseLessonsButtonInHomePage(): Promise<void> {
+    await this.expectElementToBeVisible(browseLessonButtonSelector);
+    await this.clickOn(browseLessonButtonSelector);
+
+    await this.expectElementToBeVisible(browseLessonButtonSelector, false);
+  }
+
+  /**
+   * Function to verify the home page title.
+   * @param {string} title - The expected title of the home page.
+   */
+  async expectHomePageTitleToBe(title: string): Promise<void> {
+    await this.page.waitForSelector(homePageHeadingSelector);
+    expect(
+      await this.page.$eval(homePageHeadingSelector, el => el.textContent)
+    ).toBe(title);
   }
 }
 

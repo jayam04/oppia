@@ -1041,6 +1041,19 @@ export class BaseUser {
     // Verify Tooltip.
     expect(tooltipText).toBe(expectedToolTip);
   }
+
+  async expectElementToBeVisible(
+    selector: string,
+    visibility: boolean = true,
+    parentElement?: puppeteer.ElementHandle,
+    timeout: number = 30000
+  ): Promise<void> {
+    const context = parentElement ?? this.page;
+    await context.waitForSelector(selector, {
+      visible: visibility,
+      timeout: timeout,
+    });
+  }
 }
 
 export const BaseUserFactory = (): BaseUser => new BaseUser();

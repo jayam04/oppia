@@ -27,14 +27,27 @@ import {UserFactory} from '../../utilities/common/user-factory';
 import {LoggedOutUser} from '../../utilities/user/logged-out-user';
 
 describe('Logged-Out Learner', function () {
-  let partherOrganizationUser: LoggedOutUser;
+  let loggedOutLearner: LoggedOutUser;
 
   beforeAll(async function () {
-    partherOrganizationUser = await UserFactory.createLoggedOutUser();
+    loggedOutLearner = await UserFactory.createLoggedOutUser();
   });
 
   it('should be able to find list of subjects to learn', async function () {
-    // TODO: Complete
+    await loggedOutLearner.navigateToSplashPage(false);
+    await loggedOutLearner.expectHomePageTitleToBe(
+      'Free Education for Everyone'
+    );
+    await loggedOutLearner.expectDevModeLabelToBeVisible(
+      process.env.PROD_ENV === 'true'
+    );
+  });
+
+  it('should be able to click Explore Oppia Classrooms', async function () {
+    await loggedOutLearner.clickBrowseLessonsButtonInHomePage();
+
+    // TODO: should be navigated to Math Classroom
+    await loggedOutLearner.expectCommunityLibraryHeadingToBePresent;
   });
 
   afterAll(async function () {
