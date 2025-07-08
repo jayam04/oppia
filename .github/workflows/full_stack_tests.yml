@@ -1,0 +1,275 @@
+name: Full-stack tests
+permissions: read-all
+on:
+  merge_group:
+    types: [checks_requested]
+  push:
+    branches:
+      - develop
+      - release-*
+  pull_request:
+    branches:
+      - develop
+      - release-*
+      - at-1.2.2
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+jobs:
+  e2e_and_acceptance_coverage:
+    name: Verify all e2e/acceptance tests are included
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Check that all e2e and acceptance test files are captured in wdio.conf.js and core/tests/ci-test-suite-configs
+        run: python -m scripts.check_tests_are_captured_in_ci
+      - name: Report failure if failed on oppia/oppia develop branch
+        if: ${{ failure() && github.event_name == 'push' && github.repository == 'oppia/oppia' && github.ref == 'refs/heads/develop'}}
+        uses: ./.github/actions/send-webhook-notification
+        with:
+          message: "The e2e/acceptance coverage test failed on the upstream develop branch."
+          webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
+  check_test_suites_to_run:
+    name: Compute which tests to run
+    runs-on: ubuntu-22.04
+    outputs:
+      TEST_SUITES_TO_RUN: ${{ steps.compute_test_suites.outputs.TEST_SUITES_TO_RUN }}
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+        with:
+          # This fetches all git refs, which is needed in the
+          # check_ci_test_suites_to_run script below.
+          fetch-depth: 0
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - id: compute_test_suites
+        name: Check test suites to run
+        env:
+          SHOULD_OUTPUT_ALL_TESTS: 'false'
+        # Note that the script also writes the output to $GITHUB_OUTPUT.
+        run: |
+          TEST_SUITES_TO_RUN=$(python -m scripts.check_ci_test_suites_to_run --github_head_ref="HEAD" --github_base_ref="origin/${{ github.event.pull_request.base.ref }}" ${{ env.SHOULD_OUTPUT_ALL_TESTS == 'true' && '--output_all_test_suites' || '' }})
+      - name: Upload root files mapping as a GitHub artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: root-files-mapping
+          path: root-files-mapping.json
+  build:
+    name: Build the app, and store build files as an artifact
+    needs: [check_test_suites_to_run]
+    runs-on: ubuntu-22.04
+    if: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).e2e.count > 0 ||
+            fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).lighthouse_performance.count > 0 ||
+            fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.count > 0 }}
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Generate build files
+        uses: ./.github/actions/generate-build-files
+  acceptance_test_with_python_installation:
+    needs: [check_test_suites_to_run, build]
+    runs-on: ubuntu-22.04
+    if: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.count > 0 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - name: logged-out-learner/listen-to-voiceovers-of-the-lessons-in-the-lesson-player
+          - name: logged-out-learner/play-a-complete-community-lesson
+          - name: logged-out-learner/reaches-a-checkpoint-and-saves-their-progress
+          - name: logged-out-learner/use-the-feedback-and-help-cards
+          - name: logged-out-learner/share-the-lesson-from-the-lesson-player
+          - name: logged-in-learner/see-their-progress-on-learner-dashboard
+          - name: logged-in-learner/completes-the-exploration-and-decides-what-to-do-next
+    name: Acceptance (${{ matrix.suite.name }})
+    steps:
+      - name: Check for broken suites
+        id: check_skip
+        # TODO(#22448): Remove once all suites are fixed.
+        run: |
+          broken_suites=("exploration-editor/manage-exploration-misconceptions" "exploration-editor/modify-translations-through-modal" "exploration-editor/publish-the-exploration-with-an-interaction" "practice-question-submitter/submit-practice-questions-with-different-interactions-and-difficulties")
+          for suite in "${broken_suites[@]}"; do
+            if [[ "${{ matrix.suite.name }}" == "$suite" ]]; then
+              echo "Suite '${{ matrix.suite.name }}' is marked to be skipped."
+              echo "SKIP_SUITE=true" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Generate build files
+        uses: ./.github/actions/generate-build-files
+      - name: Generate modified suite name for artifacts
+        id: generate_suite_name_for_artifacts
+        # Replace slashes in the filename with underscores.
+        run: |
+          SUITE_NAME=${{ matrix.suite.name }}
+          echo "MODIFIED_SUITE_NAME=${SUITE_NAME//\//_}" >> $GITHUB_OUTPUT
+      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }}
+        # TODO(#22448): Remove once all suites are fixed.
+        if: ${{ steps.check_skip.outputs.SKIP_SUITE != 'true' }}
+        run: >
+          set -o pipefail;
+          VIDEO_RECORDING_IS_ENABLED=0
+          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          python -m scripts.run_acceptance_tests
+          --skip-build --suite=${{ matrix.suite.name }} --prod_env --server_log_level=info
+          | tee desktop_acceptance_test_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Upload desktop acceptance test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-acceptance-test-logs-${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}
+          path: desktop_acceptance_test_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Upload desktop test failure screenshots as artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-acceptance-test-failure-screenshot-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          path: /home/runner/work/oppia/oppia_full_stack_test_failure_screenshots/acceptance
+        # TODO(#22667): We are running this step twice, as snapshot gets deleted if 2nd attempt passes.
+      - name: Uploading diff screenshots as an artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: diff-snapshots-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          # Note: The path must be kept in sync with the one specified in
+          # core/tests/puppeteer-acceptance-tests/utilities/common/puppeteer-utils.ts
+          path: /home/runner/work/oppia/oppia/core/tests/puppeteer-acceptance-tests/diff-snapshots
+      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 2 with screen recording)
+        if: ${{ failure() }}
+        run: >
+          set -o pipefail;
+          VIDEO_RECORDING_IS_ENABLED=1
+          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          python -m scripts.run_acceptance_tests
+          --skip-build --suite=${{ matrix.suite.name }} --prod_env --server_log_level=info
+          | tee desktop_acceptance_test_retry_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Upload desktop acceptance retry test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-acceptance-test-retry-logs-${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}
+          path: desktop_acceptance_test_retry_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Uploading Desktop test recordings as Artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-acceptance-test-video-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          path: /home/runner/work/oppia/oppia_full_stack_test_video_recordings/acceptance
+      - name: Uploading generated test to angular module mapping as an artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-test-to-angular-module-mapping-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          path: /home/runner/work/oppia/oppia/core/tests/test-modules-mappings/acceptance/${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.txt
+      - name: Run Mobile Acceptance Test ${{ matrix.suite.name }}
+        # TODO(#22448): Remove once all suites are fixed.
+        if: ${{ steps.check_skip.outputs.SKIP_SUITE != 'true' }}
+        run: >
+          set -o pipefail;
+          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          python -m scripts.run_acceptance_tests --skip-build --suite=${{ matrix.suite.name }}
+          --prod_env --mobile --server_log_level=info
+          | tee mobile_acceptance_test_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Upload mobile acceptance test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-acceptance-test-logs-${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}
+          path: mobile_acceptance_test_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Upload mobile test failure screenshots as artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-acceptance-test-failure-screenshot-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          path: /home/runner/work/oppia/oppia_full_stack_test_failure_screenshots/acceptance
+      - name: Run Mobile Acceptance Test ${{ matrix.suite.name }} (Attempt 2 with screen recording)
+        if: ${{ failure() }}
+        # We use xvfb-run to create a virtual screen to run tests without headless mode.
+        # Numbers in 1920x1080x24 represents screen width, height and color depth respectively.
+        run: >
+          set -o pipefail;
+          VIDEO_RECORDING_IS_ENABLED=1
+          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          python -m scripts.run_acceptance_tests --skip-build
+          --suite=${{ matrix.suite.name }} --prod_env --mobile --server_log_level=info
+          | tee mobile_acceptance_test_retry_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Upload mobile acceptance test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-acceptance-test-retry-logs-${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}
+          path: mobile_acceptance_test_retry_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
+      - name: Uploading Mobile test recordings as Artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-acceptance-test-video-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          path: /home/runner/work/oppia/oppia_full_stack_test_video_recordings/acceptance
+      - name: Uploading webpack bundles as an artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: webpack-bundles-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          path: /home/runner/work/oppia/oppia/build
+      - name: Uploading diff screenshots as an artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: diff-snapshots-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
+          # Note: The path must be kept in sync with the one specified in
+          # core/tests/puppeteer-acceptance-tests/utilities/common/puppeteer-utils.ts
+          path: /home/runner/work/oppia/oppia/core/tests/puppeteer-acceptance-tests/diff-snapshots
+      - name: Report failure if failed on oppia/oppia develop branch
+        if: ${{
+          failure() &&
+          github.event_name == 'push' &&
+          github.repository == 'oppia/oppia' &&
+          github.ref == 'refs/heads/develop'
+          }}
+        uses: ./.github/actions/send-webhook-notification
+        with:
+          message: "An acceptance test failed on the upstream develop branch."
+          webhook-url: ${{ secrets.BUILD_FAILURE_ROOM_WEBHOOK_URL }}
+  check_workflow_statuses:
+    # This job is needed because we cannot make each e2e/acceptance/lighthouse
+    # task a "required" check via GitHub, since different tasks may execute
+    # depending on which files are modified in the PR.
+    name: Check that all necessary tests pass
+    needs:
+      - check_test_suites_to_run
+      - acceptance_test_with_python_installation
+    if: always()
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Check workflow status
+        uses: ./.github/actions/check-workflow-status
+        id: check_workflow_status
+        with:
+          jobs: ${{ toJson(needs) }}
+      - name: Fail if workflow status is failure
+        if: ${{ steps.check_workflow_status.outputs.WORKFLOW_STATUS == 'failure' }}
+        run: |
+          echo ""
+          echo "NOTE TO DEVELOPERS: This CI check is failing because another e2e/acceptance/lighthouse full-stack test workflow has failed. Please see that other workflow for the relevant logs to investigate. When all full-stack workflows pass, this CI check will automatically pass."
+          echo ""
+          echo "If all other full-stack workflows have passed and this is the only failure, please file an issue on our issue tracker and link to this log. Thanks!"
+          echo ""
+          exit 1
+        shell: bash
+    permissions:
+      pull-requests: write
