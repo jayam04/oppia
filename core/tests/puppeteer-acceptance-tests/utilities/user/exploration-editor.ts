@@ -58,7 +58,9 @@ const collaboratorRoleOption = 'Collaborator (can make changes)';
 const playtesterRoleOption = 'Playtester (can give feedback)';
 const saveRoleButton = 'button.e2e-test-save-role';
 
-const programmingInteractionsButton = '.e2e-test-interaction-tab-programming';
+const commonlyUsedSectionSelector = '.e2e-test-interaction-tab-commonly-used';
+const programmingSectionSelector = '.e2e-test-interaction-tab-programming';
+const mathSectionSelector = '.e2e-test-interaction-tab-math';
 
 const interactionDiv = '.e2e-test-interaction';
 const addInteractionModalSelector = 'customize-interaction-body-container';
@@ -536,6 +538,31 @@ export class ExplorationEditor extends BaseUser {
     showMessage('Card content is updated successfully.');
   }
 
+  async clickOnInteractionCategoryTab(interaction: string): Promise<void> {
+    let selector = commonlyUsedSectionSelector;
+    if (
+      [INTERACTION_TYPES.FRACTION_INPUT].includes(
+        interaction as INTERACTION_TYPES
+      )
+    ) {
+      selector = mathSectionSelector;
+    } else if (
+      [INTERACTION_TYPES.CODE_EDITOR].includes(interaction as INTERACTION_TYPES)
+    ) {
+      selector = programmingSectionSelector;
+    }
+
+    await this.page.waitForSelector(selector, {
+      visible: true,
+    });
+    await this.clickOn(selector);
+    await this.waitForPageToFullyLoad();
+    const selected = await this.page.$eval(selector, el => el.ariaSelected);
+    if (!selected) {
+      await this.page.click(selector);
+    }
+  }
+
   /**
    * Function to add an interaction to the exploration.
    * @param {string} interactionToAdd - The interaction type to add to the Exploration.
@@ -548,13 +575,7 @@ export class ExplorationEditor extends BaseUser {
 
     await this.clickOn(addInteractionButton);
 
-    // Change tab based on interaction.
-    // Add more conditional tab changes here.
-    if (
-      INTERACTION_TABS_OF_INTERACTION_TYPE[interactionToAdd] === 'PROGRAMMING'
-    ) {
-      await this.clickOn(programmingInteractionsButton);
-    }
+    await this.clickOnInteractionCategoryTab(interactionToAdd);
     await this.clickOn(` ${interactionToAdd} `);
     await this.clickOn(saveInteractionButton);
     await this.page.waitForSelector(addInteractionModalSelector, {

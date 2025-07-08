@@ -5025,6 +5025,12 @@ export class LoggedOutUser extends BaseUser {
         `Expected concept card content to be ${content}, but it was ${conceptCardContent}`
       );
     }
+
+    // Close concept card viewer.
+    await this.clickOn('Close');
+    await this.page.waitForSelector(conceptCardViewerSelector, {
+      hidden: true,
+    });
   }
 
   /**

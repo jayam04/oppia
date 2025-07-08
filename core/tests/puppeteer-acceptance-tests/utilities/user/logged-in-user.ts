@@ -2276,10 +2276,7 @@ export class LoggedInUser extends BaseUser {
     visible: boolean = true
   ): Promise<void> {
     expect(
-      await this.isElementVisible(
-        continueFromWhereLeftOffSectionSelector,
-        visible
-      )
+      await this.isElementVisible(continueFromWhereLeftOffSectionSelector)
     ).toBe(visible);
   }
 
