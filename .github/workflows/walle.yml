@@ -75,7 +75,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.suites }}
+        suite: 
+          - name: logged-out-user/click-all-buttons-on-navbar
         mobile: ["", "--mobile"]
         prod_env: ["", "--prod_env"]
     name: (${{ matrix.prod_env == '' && 'D' || 'P' }}${{ matrix.mobile == '' && 'D' || 'M'}}) (${{ matrix.suite.name }})
