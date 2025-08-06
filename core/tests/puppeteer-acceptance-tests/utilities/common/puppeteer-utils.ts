@@ -33,6 +33,10 @@ const backgroundBanner = '.oppia-background-image';
 const libraryBanner = '.e2e-test-library-banner';
 
 const currentMatTabHeaderSelector = '.mat-tab-label-active';
+const commonModalTitleSelector = '.e2e-test-modal-header';
+const commonModalBodySelector = '.e2e-test-modal-body';
+const commonModalConfirmBtnSelector = '.e2e-test-confirm-action-button';
+const commonModalCancelBtnSelector = '.e2e-test-cancel-action-button';
 
 const VIEWPORT_WIDTH_BREAKPOINTS = testConstants.ViewportWidthBreakpoints;
 const baseURL = testConstants.URLs.BaseURL;
@@ -66,8 +70,6 @@ export type ModalUserInteractions = (
 ) => Promise<void>;
 
 const actionStatusMessageSelector = '.e2e-test-status-message';
-const commonModalTitleSelector = '.e2e-test-modal-header';
-const commonModalBodySelector = '.e2e-test-modal-body';
 
 export class BaseUser {
   page!: Page;
@@ -1683,11 +1685,8 @@ export class BaseUser {
     title: string,
     action: 'confirm' | 'cancel'
   ): Promise<void> {
-    const commonModalHeaderSelector = '.e2e-test-modal-header';
-    const commonModalConfirmBtnSelector = '.e2e-test-confirm-action-button';
-    const commonModalCancelBtnSelector = '.e2e-test-cancel-action-button';
-    await this.expectElementToBeVisible(commonModalHeaderSelector);
-    await this.expectTextContentToBe(commonModalHeaderSelector, title);
+    await this.expectElementToBeVisible(commonModalTitleSelector);
+    await this.expectTextContentToBe(commonModalTitleSelector, title);
 
     const currentActionBtnSelector =
       action === 'confirm'
@@ -1697,6 +1696,27 @@ export class BaseUser {
     await this.clickOn(currentActionBtnSelector);
 
     await this.expectElementToBeVisible(currentActionBtnSelector, false);
+  }
+
+  /**
+   * Checks if the modal title matches the expected title.
+   * @param expectedTitle The expected title of the modal.
+   */
+  async expectModalTitleToBe(expectedTitle: string): Promise<void> {
+    await this.expectElementToBeVisible(commonModalTitleSelector);
+    await this.expectTextContentToBe(commonModalTitleSelector, expectedTitle);
+  }
+
+  /**
+   * Checks if the modal body contains the expected text.
+   * @param expectedText The expected text of the modal body.
+   */
+  async expectModalBodyToContain(expectedText: string): Promise<void> {
+    await this.expectElementToBeVisible(commonModalBodySelector);
+    await this.expectTextContentToContain(
+      commonModalBodySelector,
+      expectedText
+    );
   }
 }
 
