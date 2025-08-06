@@ -33,30 +33,26 @@
           {{manualVoiceoverCurrentDuration | formatTime}} / {{manualVoiceoverTotalDuration | formatTime}}
         </span>
 
-        <div class="voiceover-action-buttons">
-          <button (click)="toggleAudioNeedsUpdate()"
-                  mat-icon-button
-                  mat-button
-                  [ngClass]="manualVoiceover.needsUpdate == true ? 'needs-update-button-icon' : 'does-not-needs-update-button-icon'">
-            <mat-icon matTooltip="Audio needs update"
-                      *ngIf="manualVoiceover.needsUpdate"
-                      class="warning-icon">
-              warning
-            </mat-icon>
-            <mat-icon matTooltip="Audio is up-to-date"
-                      *ngIf="!manualVoiceover.needsUpdate">
-              check_circle
-            </mat-icon>
-          </button>
-
-          <button (click)="deleteManualVoiceover()"
-                  mat-icon-button
-                  mat-button
-                  class="delete-manual-voiceover-icon">
-            <mat-icon matTooltip="Delete voiceover">delete</mat-icon>
-          </button>
-        </div>
-
+        <button (click)="deleteManualVoiceover()"
+                class="e2e-test-delete-voiceover-button"
+                mat-icon-button
+                mat-button>
+          <mat-icon matTooltip="Delete voiceover">close</mat-icon>
+        </button>
+        <button (click)="toggleAudioNeedsUpdate()"
+                mat-icon-button
+                mat-button
+                [ngClass]="manualVoiceover.needsUpdate == true ? 'needs-update-button-icon' : 'does-not-needs-update-button-icon'">
+          <mat-icon matTooltip="Audio needs update"
+                    *ngIf="manualVoiceover.needsUpdate"
+                    class="warning-icon">
+            warning
+          </mat-icon>
+          <mat-icon matTooltip="Audio is up-to-date"
+                    *ngIf="!manualVoiceover.needsUpdate">
+            check_circle
+          </mat-icon>
+        </button>
       </div>
 
       <div *ngIf="manualVoiceover" class="stale-manual-voiceover-warning">
