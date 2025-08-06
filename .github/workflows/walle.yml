@@ -64,13 +64,6 @@ jobs:
     steps:
       - name: Checkout repository so that local actions can be used
         uses: actions/checkout@v4
-      - name: Merge Branch
-        run: |
-          echo "Fetching all branches..."
-          git fetch --all
-
-          echo "Checking out branch: ${{ inputs.branch }}"
-          git checkout origin/${{ inputs.branch }} || git checkout ${{ inputs.branch }}
       - name: Merge develop and set up dependencies
         uses: ./.github/actions/merge-develop-and-set-up-dependencies
       - name: Generate build files
@@ -82,30 +75,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # suite:  ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.suites }}
-        suite:
-          - name: voiceover-submitter/create-delete-and-update-status-of-voiceovers-of-the-explorations
-          - name: voiceover-admin/assign-unassign-voiceover-artist-to-an-exploration        mobile: ["", "--mobile"]
+        suite: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.suites }}
+        mobile: ["", "--mobile"]
         prod_env: ["", "--prod_env"]
     name: (${{ matrix.prod_env == '' && 'D' || 'P' }}${{ matrix.mobile == '' && 'D' || 'M'}}) (${{ matrix.suite.name }})
     steps:
       - name: Checkout repository so that local actions can be used
         uses: actions/checkout@v4
-      - name: Merge Branch
-        run: |
-          echo "Base Repository: ${{ github.repository }}"
-          echo "Base Branch: ${{ github.base_ref || 'N/A' }}"
-          echo "Head Repository: ${{ github.event.pull_request.head.repo.full_name || 'N/A' }}"
-          echo "Head Branch: ${GITHUB_HEAD_REF:-'N/A'}"
-
-          echo "Fetching all branches..."
-          git fetch --all
-
-          echo "Checking out branch: ${{ inputs.branch }}"
-          git checkout ${{ inputs.branch }}
-          git pull origin ${{ inputs.branch }}
-          ls core/tests/puppeteer-acceptance-tests/specs/**
-          cat core/tests/ci-test-suite-configs/acceptance.json
       - name: Merge develop and set up dependencies
         uses: ./.github/actions/merge-develop-and-set-up-dependencies
       - name: Generate build files
@@ -117,6 +93,7 @@ jobs:
           SUITE_NAME=${{ matrix.suite.name }}
           echo "MODIFIED_SUITE_NAME=${SUITE_NAME//\//_}" >> $GITHUB_OUTPUT
       - name: Run Desktop Acceptance Test ${{ matrix.suite.name }}
+        # TODO(#22448): Remove once all suites are fixed.
         if: ${{ steps.check_skip.outputs.SKIP_SUITE != 'true' }}
         run: >
           set -o pipefail;
@@ -124,19 +101,12 @@ jobs:
           xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --suite=${{ matrix.suite.name }} ${{ matrix.prod_env }} ${{ matrix.mobile }}
-          | tee desktop_acceptance_test_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log || exit 0
-      - name: Convert suite name for display
-        id: prep
-        run: |
-          CLEANED_NAME="${SUITE_NAME//\//-}"
-          echo "name=$CLEANED_NAME" >> $GITHUB_OUTPUT
-        env:
-          SUITE_NAME: ${{ matrix.suite.name }}
+          | tee desktop_acceptance_test_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
       - name: Upload PNG artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pngs-${{ steps.prep.outputs.name }}-${{ matrix.mobile }}-${{ matrix.prod_env }}
-          path: 'core/tests/puppeteer-acceptance-tests/specs/**/*.png'
+          name: pngs-${{ matrix.suite }}-${{ matrix.mobile }}-${{ matrix.prod_env }}
+          path: '*.png'
 
   commit_pngs:
     runs-on: ubuntu-latest
@@ -146,14 +116,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
-      - name: Merge Branch
-        run: |
-          echo "Fetching all branches..."
-          git fetch --all
-
-          echo "Checking out branch: ${{ inputs.branch }}"
-          git checkout ${{ inputs.branch }}
-          git pull origin ${{ inputs.branch }}
 
       - name: Download all PNG artifacts
         uses: actions/download-artifact@v4
@@ -176,4 +138,4 @@ jobs:
             exit 0
           fi
           git commit -m "Auto-commit PNG files — powered by hardworking WALL·E 🤖"
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ inputs.branch }}-wall-e --force
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ inputs.branch }}
