@@ -551,6 +551,10 @@
     {
       "name": "blog-post-writer/create-and-edit-blog-post",
       "module": "core/tests/puppeteer-acceptance-tests/specs/blog-post-writer/create-and-edit-blog-post.spec.ts"
+    },
+    {
+      "name": "voiceover-submitter/create-delete-and-update-status-of-voiceovers-of-the-explorations",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/voiceover-submitter/create-delete-and-update-status-of-voiceovers-of-the-explorations.spec.ts"
     }
   ],
   "docker_suites": []
