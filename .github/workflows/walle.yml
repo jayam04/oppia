@@ -83,8 +83,9 @@ jobs:
       matrix:
         # suite:  ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.suites }}
         suite:
-          - name: logged-out-learner/use-the-feedback-and-help-cards
-          - name: logged-out-learner/listen-to-voiceovers-of-the-lessons-in-the-lesson-player
+          - name: blog-admin/assign-and-remove-blog-editor-and-blog-admin-roles
+          - name: blog-post-writer/register-and-update-blog-profile
+          - name: blog-post-writer/create-and-edit-blog-post
         mobile: ["", "--mobile"]
         prod_env: ["", "--prod_env"]
     name: (${{ matrix.prod_env == '' && 'D' || 'P' }}${{ matrix.mobile == '' && 'D' || 'M'}}) (${{ matrix.suite.name }})
