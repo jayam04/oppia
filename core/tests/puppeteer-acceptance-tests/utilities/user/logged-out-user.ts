@@ -579,6 +579,8 @@ const collapseWorkedExampleButton = '.e2e-test-collapse-workedexample';
 const topicViewerContainerSelector = '.e2e-test-topic-viewer-container';
 const toastMessageSelector = '.e2e-test-toast-message';
 const conceptCardCloseButtonSelector = '.e2e-test-close-concept-card';
+const voiceoverSelectSelector = '.e2e-test-audio-lang-select';
+
 /**
  * The KeyInput type is based on the key names from the UI Events KeyboardEvent key Values specification.
  * According to this specification, the keys for the numbers 0 through 9 are named 'Digit0' through 'Digit9'.
@@ -5305,10 +5307,8 @@ export class LoggedOutUser extends BaseUser {
    * Expands the voiceover bar by clicking on the dropdown.
    */
   async expandVoiceoverBar(): Promise<void> {
-    const dropdownVisible = await this.isElementVisible(voiceoverDropdown);
-    if (dropdownVisible) {
-      await this.clickOn(voiceoverDropdown);
-    }
+    await this.expectElementToBeVisible(voiceoverDropdown);
+    await this.clickOn(voiceoverDropdown);
     await this.expectElementToBeVisible(voiceoverDropdown, false);
   }
 
@@ -5317,7 +5317,6 @@ export class LoggedOutUser extends BaseUser {
    * @param language - The expected language.
    */
   async expectCurrentVoiceoverLanguageToBe(language: string): Promise<void> {
-    const voiceoverSelectSelector = '.e2e-test-audio-lang-select';
     await this.expectElementToBeVisible(voiceoverSelectSelector);
     await this.expectElementValueToBe(voiceoverSelectSelector, language);
   }
@@ -5327,7 +5326,11 @@ export class LoggedOutUser extends BaseUser {
    */
   async startVoiceover(): Promise<void> {
     await this.waitForPageToFullyLoad();
-    await this.expandVoiceoverBar();
+
+    const isDropdownVisible = await this.isElementVisible(voiceoverDropdown);
+    if (isDropdownVisible) {
+      await this.expandVoiceoverBar();
+    }
     await this.page.waitForSelector(playVoiceoverButton, {
       visible: true,
     });
