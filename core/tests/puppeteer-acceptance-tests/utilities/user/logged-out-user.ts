@@ -3147,10 +3147,11 @@ export class LoggedOutUser extends BaseUser {
    */
   async submitAnswer(answer: string): Promise<void> {
     // Allow input elements to be rendered and ready for interaction.
-    await this.page.waitForTimeout(1000);
+    await this.page.waitForTimeout(10000);
     await this.waitForElementToBeClickable(submitResponseToInteractionInput);
     await this.clearAllTextFrom(submitResponseToInteractionInput);
     await this.type(submitResponseToInteractionInput, answer);
+    await this.page.waitForTimeout(10000);
     await this.clickOn(submitAnswerButton);
   }
 

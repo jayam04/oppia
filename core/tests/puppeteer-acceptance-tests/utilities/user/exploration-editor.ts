@@ -4424,6 +4424,7 @@ export class ExplorationEditor extends BaseUser {
    * @param {string} answer - The answer to submit.
    */
   async submitAnswer(answer: string): Promise<void> {
+    await this.page.waitForTimeout(10000);
     await this.waitForElementToBeClickable(floatFormInput);
     const inputType = await this.getInputType(floatFormInput);
 
@@ -4438,6 +4439,7 @@ export class ExplorationEditor extends BaseUser {
         throw new Error(`Unsupported input type: ${inputType}`);
     }
 
+    await this.page.waitForTimeout(10000);
     await this.clickOn(submitAnswerButton);
   }
 
