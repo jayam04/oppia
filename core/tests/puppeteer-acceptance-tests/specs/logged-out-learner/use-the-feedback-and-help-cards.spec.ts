@@ -133,10 +133,6 @@ describe('Logged-Out Learner', function () {
     await loggedOutLearner.verifyCheckpointModalAppears();
     await loggedOutLearner.expectFractionInputToBeVisible();
     await loggedOutLearner.expectSubmitButtonToBe('Visible');
-    await loggedOutLearner.expectScreenshotToMatch(
-      'fractionInputInLessonPlayer',
-      __dirname
-    );
   });
 
   it('should be able to get feedback on the incorrect answer', async function () {

@@ -136,7 +136,7 @@ export class BaseUser {
               'Mobile/15A372 Safari/604.1'
           );
         } else {
-          this.page.setViewport({width: 1920, height: 1080});
+          this.page.setViewport({width: 1280, height: 800});
         }
 
         // Enable Video Recording.
@@ -970,7 +970,7 @@ export class BaseUser {
       );
     } else {
       // Set viewport for desktop.
-      await newPage.setViewport({width: 1920, height: 1080});
+      await newPage.setViewport({width: 1280, height: 800});
     }
 
     await newPage.bringToFront();
