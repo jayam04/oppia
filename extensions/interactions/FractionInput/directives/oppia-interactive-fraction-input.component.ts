@@ -90,6 +90,9 @@ export class InteractiveFractionInputComponent implements OnInit, OnDestroy {
           this.isValid = true;
           this.errorMessageI18nKey = '';
           this.currentInteractionService.updateViewWithNewAnswer();
+          console.log(
+            `[debug] ${new Date().toISOString()}:: Found Valid Answer: ${newValue}. Cleared error message at checkpoint LISTENER.`
+          );
         })
     );
   }
@@ -141,6 +144,9 @@ export class InteractiveFractionInputComponent implements OnInit, OnDestroy {
     const answer: string = this.answer;
     this.isValid = true;
     this.errorMessageI18nKey = '';
+    console.log(
+      `[debug] ${new Date().toISOString()}:: Found Answer: ${answer}. Cleared error message at checkpoint 1.`
+    );
 
     const INVALID_CHARS_REGEX = /[^\d\s\/-]/g;
     const INVALID_CHARS_LENGTH_REGEX = /\d{8,}/;
@@ -157,6 +163,9 @@ export class InteractiveFractionInputComponent implements OnInit, OnDestroy {
       this.errorMessageI18nKey =
         ObjectsDomainConstants.FRACTION_PARSING_ERROR_I18N_KEYS.INVALID_CHARS;
       this.isValid = false;
+      console.log(
+        `[debug] ${new Date().toISOString()}:: Found Invalid Chars: ${answer}. Set error message to ${this.errorMessageI18nKey} at checkpoint 2.`
+      );
     } else if (
       !(FRACTION_REGEX.test(answer) || PARTIAL_FRACTION_REGEX.test(answer))
     ) {
@@ -168,6 +177,9 @@ export class InteractiveFractionInputComponent implements OnInit, OnDestroy {
       this.isValid = true;
     }
     if (this.isValid) {
+      console.log(
+        `[debug] ${new Date().toISOString()}:: Found Valid Answer: ${answer}. No change in error message at checkpoint 3.`
+      );
       try {
         const fraction = Fraction.fromRawInputString(answer);
         // To check if the input fraction is in simplest form, the string
@@ -182,6 +194,9 @@ export class InteractiveFractionInputComponent implements OnInit, OnDestroy {
           this.errorMessageI18nKey =
             'I18N_INTERACTIONS_FRACTIONS_SIMPLEST_FORM';
           this.isValid = false;
+          console.log(
+            `[debug] ${new Date().toISOString()}:: Found Improper Fraction: ${answer}. Set error message to ${this.errorMessageI18nKey} at checkpoint 4.`
+          );
         } else if (
           !this.allowImproperFraction &&
           fraction.isImproperFraction()
@@ -189,16 +204,25 @@ export class InteractiveFractionInputComponent implements OnInit, OnDestroy {
           this.errorMessageI18nKey =
             'I18N_INTERACTIONS_FRACTIONS_PROPER_FRACTION';
           this.isValid = false;
+          console.log(
+            `[debug] ${new Date().toISOString()}:: Found Improper Fraction: ${answer}. Set error message to ${this.errorMessageI18nKey} at checkpoint 5.`
+          );
         } else if (
           !this.allowNonzeroIntegerPart &&
           fraction.hasNonzeroIntegerPart()
         ) {
           this.errorMessageI18nKey = 'I18N_INTERACTIONS_FRACTIONS_NON_MIXED';
           this.isValid = false;
+          console.log(
+            `[debug] ${new Date().toISOString()}:: Found Non-Mixed Fraction: ${answer}. Set error message to ${this.errorMessageI18nKey} at checkpoint 6.`
+          );
         } else {
           this.currentInteractionService.onSubmit(
             fraction,
             this.fractionInputRulesService
+          );
+          console.log(
+            `[debug] ${new Date().toISOString()}:: Found Valid Answer: ${answer}. No change in error message at checkpoint 7.`
           );
         }
       } catch (parsingError) {
