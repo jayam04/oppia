@@ -5042,6 +5042,7 @@ export class ExplorationEditor extends BaseUser {
 
     await this.clickOn(addManualVoiceoverButton);
     await this.uploadFile(voiceoverFilePath);
+    await this.waitForElementToStabilize(saveUploadedAudioButton);
     await this.clickOn(saveUploadedAudioButton);
     await this.waitForNetworkIdle();
 
