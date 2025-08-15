@@ -9,8 +9,30 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
+  build:
+    name: Build the app, and store build files as an artifact
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository so that local actions can be used
+        uses: actions/checkout@v4
+
+      - name: Merge Branch
+        run: |
+          echo "Fetching all branches..."
+          git fetch --all
+          echo "Checking out branch: ${{ inputs.branch }}"
+          git checkout origin/${{ inputs.branch }} || git checkout ${{ inputs.branch }}
+
+      - name: Merge develop and set up dependencies
+        uses: ./.github/actions/merge-develop-and-set-up-dependencies
+
+      - name: Generate build files
+        uses: ./.github/actions/generate-build-files
+
   acceptance-tests:
     if: startsWith(github.event.pull_request.title, 'Screenshot') || startsWith(github.event.pull_request.title, 'Debug')
+    needs: [build]
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
