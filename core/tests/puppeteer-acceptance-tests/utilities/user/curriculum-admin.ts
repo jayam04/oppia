@@ -277,6 +277,8 @@ const rteComponentSaveButton = '.e2e-test-close-rich-text-component-editor';
 const topicPreviewTab = '.e2e-test-topic-preview-tab';
 const expandWorkedExampleButton = '.e2e-test-expand-workedexample';
 
+const navigationDropdownInMobileVisibleSelector =
+  '.oppia-exploration-editor-tabs-dropdown.show';
 const openExplorationEditorNavigationMobile =
   '.oppia-exploration-editor-tabs-dropdown.show';
 const createNewSkillButton = '.e2e-test-create-skill-button';
@@ -1330,6 +1332,16 @@ export class CurriculumAdmin extends BaseUser {
       await this.clickOn(mobileNavToggleButton);
       await this.clickOn(mobileOptionsDropdown);
       await this.clickOn(mobileSettingsButton);
+
+      // Close dropdown if it doesn't automatically close.
+      const isVisible = await this.isElementVisible(
+        navigationDropdownInMobileVisibleSelector
+      );
+      if (isVisible) {
+        // We are using page.click as this button might be overlapped by the
+        // dropdown. Thus, it will fail with onClick.
+        this.page.click(mobileOptionsDropdown);
+      }
     } else {
       await this.page.waitForSelector(explorationSettingsTab, {visible: true});
       await this.clickOn(explorationSettingsTab);
