@@ -418,6 +418,8 @@ const showUnitFormatsButtonSelector = '.e2e-test-show-unit-formats';
 const codeOutputSelector = '.e2e-test-code-output';
 const graphContainerSelector = '.e2e-test-graph-input-viz-container';
 const nodeWarningSignSelector = '.e2e-test-node-warning-sign';
+const navigationDropdownInMobileVisibleSelector =
+  '.oppia-exploration-editor-tabs-dropdown.show';
 
 export enum INTERACTION_TYPES {
   ALGEBRAIC_EXPRESSION = 'Algebric Expression Input',
@@ -3658,7 +3660,7 @@ export class ExplorationEditor extends BaseUser {
       throw new Error(`Card name ${cardName} not found in the graph.`);
     }
 
-    let cardButton;
+    let cardButton: ElementHandle<Element> | null = null;
     if (this.isViewportAtMobileWidth()) {
       cardButton = elements[cardIndex + elements.length / 2];
     } else {
@@ -3691,7 +3693,7 @@ export class ExplorationEditor extends BaseUser {
         await this.navigateToCard(cardName, false);
       } else {
         error.message =
-          `Unable to navigate to the card ${cardName}\n.` + error.message;
+          `Unable to navigate to the card ${cardName}.\n` + error.message;
         throw error;
       }
     }
@@ -4323,6 +4325,16 @@ export class ExplorationEditor extends BaseUser {
       await this.clickOn(mobileNavbarDropdown);
       await this.page.waitForSelector(mobileNavbarPane);
       await this.clickAndWaitForNavigation(mobileTranslationTabButton);
+
+      // Close dropdown if it doesn't automatically close.
+      const isVisible = await this.isElementVisible(
+        navigationDropdownInMobileVisibleSelector
+      );
+      if (isVisible) {
+        // We are using page.click as this button might be overlapped by the
+        // dropdown. Thus, it will fail with onClick.
+        this.page.click(dropdownToggleIcon);
+      }
     } else {
       await this.page.waitForSelector(translationTabButton, {
         visible: true,
@@ -4351,6 +4363,16 @@ export class ExplorationEditor extends BaseUser {
       await this.clickOn(mobileNavbarDropdown);
       await this.page.waitForSelector(mobileNavbarPane);
       await this.clickOn(mobileMainTabButton);
+
+      // Close dropdown if it doesn't automatically close.
+      const isVisible = await this.isElementVisible(
+        navigationDropdownInMobileVisibleSelector
+      );
+      if (isVisible) {
+        // We are using page.click as this button might be overlapped by the
+        // dropdown. Thus, it will fail with onClick.
+        this.page.click(dropdownToggleIcon);
+      }
     } else {
       await this.page.waitForSelector(mainTabButton, {
         visible: true,
