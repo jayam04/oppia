@@ -16,19 +16,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-
-    steps:
-      - name: Generate matrix
-        id: set-matrix
-        run: |
-          RUNS=${{ github.event.inputs.runs }}
-          LIST=$(seq -s ',' $RUNS)
-          echo "matrix=[${LIST}]" >> $GITHUB_OUTPUT
-
   build:
     name: Build the app, and store build files as an artifact
     runs-on: ubuntu-22.04
@@ -49,7 +36,7 @@ jobs:
       matrix:
         suite: 
           - name: ${{ github.event.inputs.testsuite }}
-        runs: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+        runs: [1, 2, 3, ..., 16]
         mobile: [false, true]
     name: ${{ matrix.mobile && 'Mobile' || 'Desktop' }} Acceptance Test ${{ matrix.suite.name }}
 
