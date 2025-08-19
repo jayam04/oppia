@@ -71,7 +71,6 @@ const submitSolutionButton = 'button.e2e-test-submit-solution-button';
 const saveQuestionButton = 'button.e2e-test-save-question-button';
 
 const dismissWelcomeModalSelector = 'button.e2e-test-dismiss-welcome-modal';
-const dropdownToggleIcon = '.e2e-test-mobile-options-dropdown';
 
 const topicsTab = 'a.e2e-test-topics-tab';
 const desktopTopicSelector = 'a.e2e-test-topic-name';
