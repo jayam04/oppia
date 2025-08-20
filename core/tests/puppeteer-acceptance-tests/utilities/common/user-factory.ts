@@ -190,6 +190,9 @@ export class UserFactory {
       CurriculumAdminFactory(),
     ]);
 
+    user.username = username;
+    user.email = email;
+
     await user.openBrowser();
     await user.signUpNewUser(username, email);
     activeUsers.push(user);

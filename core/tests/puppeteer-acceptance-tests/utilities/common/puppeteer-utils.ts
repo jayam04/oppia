@@ -76,7 +76,7 @@ export class BaseUser {
   email: string = '';
   username: string = '';
   startTimeInMilliseconds: number = -1;
-  screenRecorder!: PuppeteerScreenRecorder;
+  screenRecorder: PuppeteerScreenRecorder | null = null;
   static instances: BaseUser[] = []; // Track instances.
 
   constructor() {
@@ -161,47 +161,70 @@ export class BaseUser {
             fs.mkdirSync(outputDir, {recursive: true});
           }
 
+          // Mobile-specific configuration adjustments for stability
           const config = {
-            followNewTab: true,
+            followNewTab: mobile ? false : true, // Disable for mobile to prevent session issues
             fps: 25,
             ffmpeg_Path: null,
             // Below dimensions are of recorded video.
             videoFrame: {
-              width: 1280,
-              height: 720,
+              width: mobile ? 375 : 1280,
+              height: mobile ? 667 : 720,
             },
-            aspectRatio: '16:9',
-            videoCrf: 18,
+            aspectRatio: mobile ? '9:16' : '16:9',
+            videoCrf: mobile ? 23 : 18,
             videoCodec: 'libx264',
-            videoPreset: 'medium',
-            videoBitrate: 1000,
+            videoPreset: mobile ? 'fast' : 'medium', // Faster preset for mobile
+            videoBitrate: mobile ? 500 : 1000, // Lower bitrate for mobile
             autopad: {
               color: 'black',
             },
-            waitForFrameBeforeStart: 2000,
-            waitForFrameAfterPageLoad: 2000,
-            maxRetries: 3, // Add retry mechanism.
+            waitForFrameBeforeStart: mobile ? 1000 : 2000,
+            waitForFrameAfterPageLoad: mobile ? 1000 : 2000,
+            maxRetries: 3,
             ffmpegFlags: [
-              // Additional ffmpeg flags for stability.
               '-movflags',
               '+faststart',
               '-max_muxing_queue_size',
               '9999',
+              ...(mobile ? ['-preset', 'ultrafast'] : []), // Ultra fast preset for mobile
             ],
           };
 
           const fullScreenRecordingPath = path.join(outputDir, outputFileName);
           showMessage(`Saving screen recording to ${fullScreenRecordingPath}`);
-          this.screenRecorder = new PuppeteerScreenRecorder(this.page, config);
-          await this.screenRecorder.start(fullScreenRecordingPath);
+
+          try {
+            this.screenRecorder = new PuppeteerScreenRecorder(
+              this.page,
+              config
+            );
+            await this.screenRecorder.start(fullScreenRecordingPath);
+            showMessage(
+              `Screen recording started successfully for ${mobile ? 'mobile' : 'desktop'} mode`
+            );
+          } catch (error) {
+            showMessage(`Failed to start screen recording: ${error.message}`);
+            // Don't fail the test if recording fails to start
+            this.screenRecorder = null;
+          }
 
           // Ensure recording is stopped when the test fails.
-          process.on('SIGTERM', async () => {
-            await this.screenRecorder.stop();
-          });
-          process.on('SIGINT', async () => {
-            await this.screenRecorder.stop();
-          });
+          const stopRecording = async () => {
+            if (this.screenRecorder) {
+              try {
+                await this.screenRecorder.stop();
+                showMessage('Screen recording stopped via signal handler');
+              } catch (error) {
+                showMessage(
+                  `Error stopping recording via signal: ${error.message}`
+                );
+              }
+            }
+          };
+
+          process.on('SIGTERM', stopRecording);
+          process.on('SIGINT', stopRecording);
         }
 
         // Set up Download Folder.
@@ -284,6 +307,9 @@ export class BaseUser {
    */
   private async setupDebugTools(): Promise<void> {
     await this.setupClickLogger();
+
+    // Note: Screen recording is not restarted here automatically to avoid
+    // multiple recordings. It should be managed explicitly by the test logic.
   }
 
   /**
@@ -384,6 +410,19 @@ export class BaseUser {
    * interacting with an element on the current page.
    */
   async switchToPageOpenedByElementInteraction(): Promise<void> {
+    // Stop screen recording on current page if active to prevent session conflicts
+    if (this.screenRecorder && process.env.VIDEO_RECORDING_IS_ENABLED === '1') {
+      try {
+        await this.screenRecorder.stop();
+        showMessage('Stopped screen recording before switching pages');
+      } catch (error) {
+        showMessage(
+          `Error stopping recording before page switch: ${error.message}`
+        );
+      }
+      this.screenRecorder = null;
+    }
+
     const newPage: Page =
       (await (
         await this.browserObject.waitForTarget(
@@ -622,6 +661,33 @@ export class BaseUser {
   }
 
   /**
+   * Safely stops screen recording if it's active.
+   */
+  async stopScreenRecording(): Promise<void> {
+    if (this.screenRecorder) {
+      try {
+        // Check if page is still accessible
+        if (this.page && !this.page.isClosed()) {
+          await this.screenRecorder.stop();
+          showMessage(
+            `Screen recording stopped safely for ${this.username ?? 'unknown user'}`
+          );
+        } else {
+          showMessage(
+            `Page closed, cannot stop screen recording normally for ${this.username ?? 'unknown user'}`
+          );
+        }
+      } catch (error) {
+        showMessage(
+          `Error stopping screen recording: ${error.message || error}`
+        );
+      } finally {
+        this.screenRecorder = null;
+      }
+    }
+  }
+
+  /**
    * This function logs out the current user.
    */
   async logout(): Promise<void> {
@@ -634,19 +700,46 @@ export class BaseUser {
    */
   async closeBrowser(): Promise<void> {
     showMessage(
-      `Started closing broswer for ${this.username ?? 'unknown user'}.`
+      `Started closing browser for ${this.username ?? 'unknown user'}.`
     );
-    // Stop the screen recorder.
+
+    // Stop the screen recorder with better error handling.
     if (this.screenRecorder) {
       try {
-        await this.screenRecorder.stop();
-        showMessage(
-          `Screen recording stopped for ${this.username ?? 'unknown user'}.`
-        );
+        // Check if the page is still accessible before stopping recording
+        if (this.page && !this.page.isClosed()) {
+          await this.screenRecorder.stop();
+          showMessage(
+            `Screen recording stopped for ${this.username ?? 'unknown user'}.`
+          );
+        } else {
+          showMessage(
+            `Page already closed, skipping screen recording stop for ${this.username ?? 'unknown user'}.`
+          );
+        }
       } catch (error) {
+        // Log the error but don't fail the test cleanup
         showMessage(
-          `Error while stopping screen recording for ${this.username}: ${error}`
+          `Error while stopping screen recording for ${this.username}: ${error.message || error}`
         );
+
+        // Try to force stop if normal stop fails
+        try {
+          if (
+            this.screenRecorder &&
+            typeof this.screenRecorder.stop === 'function'
+          ) {
+            // Force stop without waiting for page operations
+            this.screenRecorder = null;
+          }
+        } catch (forceStopError) {
+          showMessage(
+            `Force stop also failed for ${this.username}: ${forceStopError.message || forceStopError}`
+          );
+        }
+      } finally {
+        // Ensure screenRecorder is nullified
+        this.screenRecorder = null;
       }
     }
 
@@ -971,7 +1064,12 @@ export class BaseUser {
     await newTabPage.bringToFront();
     expect(newTabPage).toBeDefined();
     expect(newTabPage.url()).toBe(expectedDestinationPageUrl);
+
     if (closePage) {
+      // Stop screen recording before closing the tab to prevent session errors
+      if (this.screenRecorder && this.page === newTabPage) {
+        await this.stopScreenRecording();
+      }
       await newTabPage.close();
       return null;
     }
@@ -1053,6 +1151,9 @@ export class BaseUser {
    * Creates a new tab in the browser and switches to it.
    */
   async createAndSwitchToNewTab(): Promise<puppeteer.Page> {
+    // Stop screen recording on current page to prevent conflicts
+    await this.stopScreenRecording();
+
     const newPage = await this.browserObject.newPage();
 
     if (this.isViewportAtMobileWidth()) {
