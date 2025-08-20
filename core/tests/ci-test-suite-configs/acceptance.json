@@ -511,6 +511,58 @@
     {
       "name": "logged-in-learner/export-and-delete-account",
       "module": "core/tests/puppeteer-acceptance-tests/specs/logged-in-learner/export-and-delete-account.spec.ts"
+    },
+    {
+      "name": "blog-admin/assign-and-remove-blog-editor-and-blog-admin-roles",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/blog-admin/assign-and-remove-blog-editor-and-blog-admin-roles.spec.ts"
+    },
+    {
+      "name": "blog-post-writer/create-and-edit-blog-post",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/blog-post-writer/create-and-edit-blog-post.spec.ts"
+    },
+    {
+      "name": "blog-post-writer/register-and-update-blog-profile",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/blog-post-writer/register-and-update-blog-profile.spec.ts"
+    },
+    {
+      "name": "curriculum-admin/create-skill-with-workedexamples",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/curriculum-admin/create-skill-with-workedexamples.spec.ts"
+    },
+    {
+      "name": "curriculum-admin/try-to-paste-invalid-components-and-get-error",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/curriculum-admin/try-to-paste-invalid-components-and-get-error.spec.ts"
+    },
+    {
+      "name": "exploration-editor/manage-exploration-misconceptions",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/exploration-editor/manage-exploration-misconceptions.spec.ts"
+    },
+    {
+      "name": "exploration-editor/modify-translations-through-modal",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/exploration-editor/modify-translations-through-modal.spec.ts"
+    },
+    {
+      "name": "exploration-editor/publish-the-exploration-with-an-interaction",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/exploration-editor/publish-the-exploration-with-an-interaction.spec.ts"
+    },
+    {
+      "name": "logged-in-user/add-concept-card-with-workedexample-to-exploration",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/logged-in-user/add-concept-card-with-workedexample-to-exploration.spec.ts"
+    },
+    {
+      "name": "practice-question-submitter/submit-practice-questions-with-different-interactions-and-difficulties",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/practice-question-submitter/submit-practice-questions-with-different-interactions-and-difficulties.spec.ts"
+    },
+    {
+      "name": "voiceover-admin/assign-unassign-voiceover-artist-to-an-exploration",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/voiceover-admin/assign-unassign-voiceover-artist-to-an-exploration.spec.ts"
+    },
+    {
+      "name": "voiceover-submitter/create-delete-and-update-status-of-voiceovers-of-the-explorations",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/voiceover-submitter/create-delete-and-update-status-of-voiceovers-of-the-explorations.spec.ts"
+    },
+    {
+      "name": "voiceover-admin/add-voiceover-artist-to-an-exploration",
+      "module": "core/tests/puppeteer-acceptance-tests/specs/voiceover-admin/add-voiceover-artist-to-an-exploration.spec.ts"
     }
   ],
   "docker_suites": []
