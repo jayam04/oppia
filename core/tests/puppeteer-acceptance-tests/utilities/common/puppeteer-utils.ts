@@ -1635,27 +1635,6 @@ export class BaseUser {
   }
 
   /**
-   * Checks if the modal title matches the expected title.
-   * @param expectedTitle The expected title of the modal.
-   */
-  async expectModalTitleToBe(expectedTitle: string): Promise<void> {
-    await this.expectElementToBeVisible(commonModalTitleSelector);
-    await this.expectTextContentToBe(commonModalTitleSelector, expectedTitle);
-  }
-
-  /**
-   * Checks if the modal body contains the expected text.
-   * @param expectedText The expected text of the modal body.
-   */
-  async expectModalBodyToContain(expectedText: string): Promise<void> {
-    await this.expectElementToBeVisible(commonModalBodySelector);
-    await this.expectTextContentToContain(
-      commonModalBodySelector,
-      expectedText
-    );
-  }
-
-  /**
    * Checks if the current mat tab header matches the expected header.
    * @param expectedHeader The expected header of the mat tab.
    */
