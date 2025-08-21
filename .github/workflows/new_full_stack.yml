@@ -110,69 +110,69 @@ jobs:
         if: ${{ steps.check_skip.outputs.SKIP_SUITE != 'true' }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 2)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 2)
         if: ${{ always() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 3)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 3)
         if: ${{ always() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 4)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 4)
         if: ${{ failure() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 5)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 5)
         if: ${{ failure() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 6)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 6)
         if: ${{ failure() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 7)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 7)
         if: ${{ failure() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 8)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 8)
         if: ${{ failure() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 9)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 9)
         if: ${{ failure() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
-      - name: Run Desktop Acceptance Test ${{ matrix.suite.name }} (Attempt 10)
+      - name: Run Acceptance Test ${{ matrix.suite.name }} (Attempt 10)
         if: ${{ failure() }}
         run: >
           set -o pipefail;
-          xvfb-run -a --server-args="-screen 0, 1920x1080x24"
+          VIDEO_RECORDING_IS_ENABLED=1 xvfb-run -a --server-args="-screen 0, 1920x1080x24"
           python -m scripts.run_acceptance_tests
           --skip-build --suite=${{ matrix.suite.name }} --prod_env ${{ matrix.mobile && '--mobile' || '' }}
