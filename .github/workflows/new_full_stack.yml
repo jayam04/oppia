@@ -80,7 +80,7 @@ jobs:
       fail-fast: false
       matrix:
         suite: ${{ fromJSON(needs.check_test_suites_to_run.outputs.TEST_SUITES_TO_RUN).acceptance.python.suites }}
-        mobile: [false]
+        mobile: [true]
     name: ${{ matrix.mobile && 'Mobile' || 'Desktop' }}(${{ matrix.suite.name }})
     steps:
       - name: Check for broken suites
