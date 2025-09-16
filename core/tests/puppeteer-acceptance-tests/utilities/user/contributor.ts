@@ -109,32 +109,6 @@ export class Contributor extends ExplorationEditor {
       opportunityItemSelector
     );
 
-    // Sometimes, the opportunities refreshes after they have been loaded.
-    // This causes problem that older node gets detached from the DOM.
-    // So, we are ensuring that the opportunity list hasn't been changed
-    // for 200 ms.
-    let previousElementIds: string[] = [];
-    let opportunityItemListChanged = true;
-
-    do {
-      await this.page.waitForTimeout(200);
-
-      const currentElementIds = await this.page.evaluate((selector: string) => {
-        const elements = document.querySelectorAll(selector);
-        return Array.from(elements).map((el, index) => {
-          return el.textContent?.trim() || `element-${index}`;
-        });
-      }, opportunityItemSelector);
-
-      opportunityItemListChanged =
-        previousElementIds.length !== currentElementIds.length ||
-        !previousElementIds.every(
-          (id, index) => id === currentElementIds[index]
-        );
-
-      previousElementIds = currentElementIds;
-    } while (opportunityItemListChanged);
-
     // Handle the case where no translation opportunity is present.
     if (!translationOpportunitiesPreset) {
       if (visible) {
