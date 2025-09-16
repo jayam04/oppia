@@ -7,10 +7,12 @@ on:
     branches:
       - develop
       - release-*
+      - m2.3
   pull_request:
     branches:
       - develop
       - release-*
+      - m2.3
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
