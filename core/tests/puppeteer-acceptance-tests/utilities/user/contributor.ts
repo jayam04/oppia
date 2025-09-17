@@ -414,11 +414,20 @@ export class Contributor extends ExplorationEditor {
       throw new Error(`Option ${topicName} not found.`);
     }
 
+    const headingRemovedPromise = this.expectElementToBeVisible(
+      opportunityItemHeadingSelector,
+      false
+    );
+
     // Click on the option.
     await optionElement.click();
 
     // Verify option is selected.
     await this.expectTextContentToBe(selectedTopicSelector, topicName);
+
+    // Ensure heading is resetted.
+    await headingRemovedPromise;
+    await this.expectElementToBeVisible(opportunityItemHeadingSelector, true);
   }
 
   /**

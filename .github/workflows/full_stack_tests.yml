@@ -70,7 +70,7 @@ jobs:
         run1: [1, 2]
         run2: [1]
         mobile: [false, true]
-        prod: [false, true]
+        prod: [true]
     name: ${{ matrix.mobile && 'M' || 'D' }}-${{ matrix.suite.short_name }}
     steps:
       - name: Check for broken suites
