@@ -107,21 +107,27 @@ export class Contributor extends ExplorationEditor {
   ): Promise<ElementHandle | null> {
     await this.page.waitForFunction(
       (
-        itemSelector: string,
-        headingSelector: string,
-        subheadingSelector: string,
-        subheading: string,
+        opportunityItemSelector: string,
+        opportunityItemHeadingSelector: string,
+        opportunitySubHeadingSelector: string,
         heading: string,
+        subheading: string,
         visible: boolean
       ) => {
-        const items = Array.from(document.querySelectorAll(itemSelector));
+        const opportunityItems = Array.from(
+          document.querySelectorAll(opportunityItemSelector)
+        );
         return (
-          items.some(item => {
-            const headingElement = item.querySelector(headingSelector);
-            const subheadingElement = item.querySelector(subheadingSelector);
+          opportunityItems.some(item => {
+            const headingElement = item.querySelector(
+              opportunityItemHeadingSelector
+            );
+            const subheadingElement = item.querySelector(
+              opportunitySubHeadingSelector
+            );
             return (
               headingElement?.textContent?.trim() === heading &&
-              subheadingElement?.textContent?.includes(subheading)
+              subheadingElement?.textContent?.trim()?.includes(subheading)
             );
           }) === visible
         );
