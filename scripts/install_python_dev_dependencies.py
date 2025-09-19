@@ -143,10 +143,12 @@ def compile_pip_requirements(
         new_compiled = f.read()
 
     if old_compiled != new_compiled:
+        subprocess.run(['pip-compile', '--version'], check=True)
         raise RuntimeError(
             f'Requirements file {requirements_path} has changed. Please run '
             '`python -m scripts.install_python_dev_dependencies` to update '
             f'{compiled_path}.\n'
+            f'Pip compul'
             f'Old file: \n'
             f'{old_compiled}\n'
             f'New file: \n'
