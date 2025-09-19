@@ -43,7 +43,7 @@ from typing import Final
 from scripts import install_python_dev_dependencies  # isort:skip   pylint: disable=wrong-import-position, wrong-import-order
 
 if not feconf.OPPIA_IS_DOCKERIZED:
-    install_python_dev_dependencies.main(['--assert_compiled'])
+    install_python_dev_dependencies.main([])
     from . import pre_commit_hook  # isort:skip  pylint: disable=wrong-import-position, wrong-import-order
     from . import pre_push_hook  # isort:skip  pylint: disable=wrong-import-position, wrong-import-order
 
