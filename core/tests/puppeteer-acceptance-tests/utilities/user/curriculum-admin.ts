@@ -269,11 +269,12 @@ const navigationDropdown = '.e2e-test-mobile-skill-nav-dropdown-icon';
 const addNewSkillButton = '.e2e-test-create-skill-button-circle';
 const createNewSkillMobileButton =
   '.e2e-test-mobile-create-skill-button-secondary';
+const toggleSkillRubricsDropdown = '.e2e-test-toggle-rubrics-dropdown';
+const navigationContainerSelector = '.e2e-test-mobile-navigation-bar-container';
+const toggleRubricsDropdownSelector = '.e2e-test-toggle-rubrics-dropdown';
 const mobileSaveOrPublishSkillSelector = '.e2e-test-mobile-save-skill-changes';
 const mobileSkillNavToggle =
   'div.e2e-test-mobile-toggle-skill-nav-dropdown-icon';
-const toggleSkillRubricsDropdown = '.e2e-test-toggle-rubrics-dropdown';
-const navigationContainerSelector = '.e2e-test-mobile-navigation-bar-container';
 
 const createNewSkillButtonInSkillDashboardSelector =
   '.e2e-test-create-skill-button-circle';
@@ -1311,7 +1312,7 @@ export class CurriculumAdmin extends TopicManager {
     await this.page.waitForSelector(assignSubtopicButton, {
       visible: true,
     });
-    await this.clickOn('Assign to Subtopic');
+    await this.clickOnElementWithText('Assign to Subtopic');
 
     await this.page.waitForSelector(subtopicNameSelector, {visible: true});
     await this.page.evaluate(
@@ -1367,6 +1368,15 @@ export class CurriculumAdmin extends TopicManager {
         break;
       default:
         throw new Error(`Unknown difficulty: ${difficulty}`);
+    }
+
+    // Expand the difficulty rubric section in mobile.
+    if (
+      this.isViewportAtMobileWidth() &&
+      !(await this.isElementVisible(selectRubricDifficultySelector))
+    ) {
+      await this.expectElementToBeVisible(toggleRubricsDropdownSelector);
+      await this.clickOn(toggleRubricsDropdownSelector);
     }
     await this.waitForElementToBeClickable(selectRubricDifficultySelector);
     await this.select(selectRubricDifficultySelector, difficultyValue);
