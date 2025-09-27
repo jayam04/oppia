@@ -99,22 +99,38 @@ describe('Curriculum Admin', function () {
     await curriculumAdmin.expandStudyGuideSectionTile(0);
     await curriculumAdmin.expectScreenshotToMatch(
       'sectionTileOneExpanded',
-      __dirname
+      __dirname,
+      undefined,
+      {
+        fullPage: true,
+      }
     );
     await curriculumAdmin.expandStudyGuideSectionTile(2);
     await curriculumAdmin.expectScreenshotToMatch(
       'sectionTileThreeExpanded',
-      __dirname
+      __dirname,
+      undefined,
+      {
+        fullPage: true,
+      }
     );
     await curriculumAdmin.openSectionHeadingEditor();
     await curriculumAdmin.expectScreenshotToMatch(
       'sectionTileThreeHeadingEditable',
-      __dirname
+      __dirname,
+      undefined,
+      {
+        fullPage: true,
+      }
     );
     await curriculumAdmin.openSectionContentEditor();
     await curriculumAdmin.expectScreenshotToMatch(
       'sectionTileThreeContentEditable',
-      __dirname
+      __dirname,
+      undefined,
+      {
+        fullPage: true,
+      }
     );
     await curriculumAdmin.deleteStudyGuideSection(1);
     await curriculumAdmin.saveTopicDraft('Addition and Subtraction');
