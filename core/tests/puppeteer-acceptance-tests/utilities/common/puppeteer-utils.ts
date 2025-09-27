@@ -979,7 +979,8 @@ export class BaseUser {
     }
 
     try {
-      expect(await currentPage.screenshot(screenshotOptions).toMatchImageSnapshot({
+      const screenshot = await currentPage.screenshot(screenshotOptions);
+      expect(screenshot).toMatchImageSnapshot({
         failureThreshold: failureTrigger,
         failureThresholdType: 'percent',
         customSnapshotIdentifier: imageName,
