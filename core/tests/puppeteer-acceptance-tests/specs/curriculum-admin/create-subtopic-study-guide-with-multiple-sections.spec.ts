@@ -66,25 +66,16 @@ describe('Curriculum Admin', function () {
       'Addition and Subtraction',
       false
     );
-    await curriculumAdmin.scrollToTopOfPage();
     await curriculumAdmin.expectScreenshotToMatch(
       'subtopicWithSingleSection',
-      __dirname,
-      undefined,
-      {
-        fullPage: true,
-      }
+      __dirname
     );
     await curriculumAdmin.saveTopicDraft('Addition and Subtraction');
     await curriculumAdmin.checkAddSectionModalShowsLengthError();
-    await curriculumAdmin.scrollToTopOfPage();
+    await curriculumAdmin.scrollToBottomOfPage();
     await curriculumAdmin.expectScreenshotToMatch(
       'sectionContentLengthError',
-      __dirname,
-      undefined,
-      {
-        fullPage: true,
-      }
+      __dirname
     );
     await curriculumAdmin.clearContentFieldAndCloseAddSectionModal();
     await curriculumAdmin.addSubtopicStudyGuideSection(
