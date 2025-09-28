@@ -48,7 +48,7 @@ jobs:
         suite:
           - name: curriculum-admin/create-subtopic-study-guide-with-multiple-sections
             short_name: for-snaps
-        run1: [1]
+        run1: [1, 2]
         run2: [1]
         mobile: [false, true]
         prod: [true, false]
