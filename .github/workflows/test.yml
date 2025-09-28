@@ -48,10 +48,10 @@ jobs:
         suite:
           - name: curriculum-admin/create-subtopic-study-guide-with-multiple-sections
             short_name: for-snaps
-        run1: [1, 2]
-        run2: [1]
+        run1: [1, 2, 3, 4, 5]
+        run2: [1, 2]
         mobile: [false, true]
-        prod: [true, false]
+        prod: [true]
     name: ${{ matrix.prod && 'P' || 'D' }}${{ matrix.mobile && 'M' || 'D' }}-${{ matrix.suite.short_name }}
     steps:
       - name: Check for broken suites
