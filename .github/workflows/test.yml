@@ -49,9 +49,9 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          - name: curriculum-admin/create-edit-and-delete-a-classroom
-            short_name: create-edit-and-delete-a-classroom
-        run1: [1, 2, 3, 4, 5]
+          - name: exploration-creator/preview-math-interactions
+            short_name: exploration-creator/preview-math-interactions
+        run1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         run2: [1, 2, 3, 4, 5]
         mobile: [false, true]
     name: ${{ matrix.mobile && 'M' || 'D' }}-${{ matrix.suite.short_name }}
