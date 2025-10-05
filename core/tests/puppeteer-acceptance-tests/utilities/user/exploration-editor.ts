@@ -1679,9 +1679,7 @@ export class ExplorationEditor extends BaseUser {
     if (!algebricExpressionEditor) {
       throw new Error('Algebric expression editor not found.');
     }
-
-    await algebricExpressionEditor.click();
-    await algebricExpressionEditor.type(solution);
+    await this.typeInInputField(algebricExpressionEditor, solution);
 
     await this.clickOnElementWithSelector(submitAnswerButton);
 
