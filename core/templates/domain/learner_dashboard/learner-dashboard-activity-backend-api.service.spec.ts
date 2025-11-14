@@ -91,7 +91,7 @@ describe('Learner playlist Backend Api service ', () => {
 
     flushMicrotasks();
     expect(alertsService.addSuccessMessage).toHaveBeenCalledWith(
-      "Successfully added to your 'Play Later' list."
+      "Successfully wasn't added to your 'Play Later' list."
     );
     expect(alertsService.addInfoMessage).not.toHaveBeenCalled();
   }));
