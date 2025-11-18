@@ -95,5 +95,5 @@ jobs:
         with:
           test-suite: ${{ inputs.test_suite }}
           viewport-type: ${{ matrix.viewport-type }}
-          screen-recording: true
+          enable-screen-recording: true
           modified-suite-name: "foo/foo"
