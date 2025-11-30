@@ -34,7 +34,6 @@ describe('Interested Donor', function () {
     await interestedDonor.expectScreenshotToMatch('donatePage', __dirname);
 
     await interestedDonor.navigateToSplashPage();
-    await interestedDonor.clickDonateButtonOnNavbar();
     await interestedDonor.expectScreenshotToMatch('donatePage', __dirname);
 
     await interestedDonor.expectDonationPageHeadingToBe(' Our Impact ');
