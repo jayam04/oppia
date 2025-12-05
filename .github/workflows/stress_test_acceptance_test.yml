@@ -56,8 +56,18 @@ jobs:
         uses: actions/checkout@v4
       - name: Merge develop and set up dependencies
         uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Pip packages before generate build files
+        run: |
+          pip check
+          pip freeze
+        shell: bash
       - name: Generate build files
         uses: ./.github/actions/generate-build-files
+      - name: Pip packages after generate build files
+        run: |
+          pip check
+          pip freeze
+        shell: bash
 
   run_acceptance_test:
     needs: [build, generate-matrix]
@@ -83,8 +93,18 @@ jobs:
         uses: actions/checkout@v4
       - name: Merge develop and set up dependencies
         uses: ./.github/actions/merge-develop-and-set-up-dependencies
+      - name: Pip packages before generate build files
+        run: |
+          pip check
+          pip freeze
+        shell: bash
       - name: Generate build files
         uses: ./.github/actions/generate-build-files
+      - name: Pip packages after generate build files
+        run: |
+          pip check
+          pip freeze
+        shell: bash
       - name: Generate modified suite name for artifacts
         id: generate_suite_name_for_artifacts
         # Replace slashes in the filename with underscores.
