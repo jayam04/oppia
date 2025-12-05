@@ -1870,20 +1870,19 @@ export class BaseUser {
    * @param {string} expectedMessage - The expected message to match the toast message against.
    */
   async expectToastMessage(expectedMessage: string): Promise<void> {
-    await this.page.waitForSelector(toastMessageSelector, {visible: true});
-    const toastMessageElement = await this.page.$(toastMessageSelector);
-    const toastMessage = await this.page.evaluate(
-      el => el.textContent.trim(),
-      toastMessageElement
+    await this.page.waitForFunction(
+      (toastMessageSelector: string, expectedMessage: string) => {
+        const element = document.querySelector(toastMessageSelector);
+        return (
+          element && element.textContent?.trim() === expectedMessage.trim()
+        );
+      },
+      {},
+      toastMessageSelector,
+      expectedMessage
     );
-
-    if (toastMessage !== expectedMessage) {
-      throw new Error(
-        `Expected toast message to be "${expectedMessage}", but it was "${toastMessage}".`
-      );
-    }
     if (this.isViewportAtMobileWidth()) {
-      await this.page.click(toastMessageSelector);
+      await this.clickOnElementWithSelector(toastMessageSelector);
     }
     await this.expectElementToBeVisible(toastMessageSelector, false);
   }
