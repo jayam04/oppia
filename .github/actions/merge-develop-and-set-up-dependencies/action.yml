@@ -1,5 +1,10 @@
 name: Merge develop and set up dependencies
 description: 'Merge develop into current branch, and set up dependencies'
+
+outputs:
+  pip-cache-hit:
+    value: ${{ steps.restore_python_dev_dependencies_cache.outputs.cache-hit }}
+
 runs:
   using: composite
   steps:

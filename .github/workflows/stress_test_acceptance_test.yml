@@ -55,9 +55,18 @@ jobs:
       - name: Checkout repository so that local actions can be used
         uses: actions/checkout@v4
       - name: Merge develop and set up dependencies
+        id: merge-develop-and-set-up-dependencies
         uses: ./.github/actions/merge-develop-and-set-up-dependencies
       - name: Generate build files
         uses: ./.github/actions/generate-build-files
+      # Note: We are using cache for pip packages. When cache is not found, the new cache is uploaded
+      # after last step of this job. However, "Generate build files" job removes the pip packages
+      # before it's cached. So, we need to reinstall python dependencies libs after the build files
+      # are generated. So, incomplete packages are not cached.
+      - name: Reinstall python dependencies
+        if: ${{ steps.merge-develop-and-set-up-dependencies.outputs.pip-cache-hit == false }}
+        run: |
+          python -m scripts.install_python_dev_dependencies
 
   run_acceptance_test:
     needs: [build, generate-matrix]
