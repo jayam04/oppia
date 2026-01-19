@@ -144,13 +144,13 @@ jobs:
           name: e2e-test-retry-logs-${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}
           path: e2e_test_retry_${{ steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME }}.log
       - name: Uploading webdriverio-video as Artifacts
-        if: ${{ failure() }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: webdriverio-video-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
           path: /home/runner/work/oppia/webdriverio-video
       - name: Uploading webdriverio screenshots as Artifacts
-        if: ${{ failure() }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: webdriverio-screenshots-${{steps.generate_suite_name_for_artifacts.outputs.MODIFIED_SUITE_NAME}}
