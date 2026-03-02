@@ -131,6 +131,12 @@ export class BaseUser {
           TestToModulesMatcher.registerPuppeteerBrowser(browser);
         }
         this.page = await browser.newPage();
+
+        // Debug
+        this.page.on('framenavigated', frame => {
+          console.log('NAVIGATED:', frame.url());
+        });
+
         this.pages.push(this.page);
 
         if (mobile) {
@@ -653,6 +659,9 @@ export class BaseUser {
       waitUntil: ['networkidle2', 'load'],
     }
   ): Promise<void> {
+    this.page.on('framenavigated', frame => {
+      console.log('NAVIGATED:', frame.url());
+    });
     const navigationPromise = this.page.waitForNavigation(options);
 
     if (useSelector) {
