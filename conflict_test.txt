@@ -1,0 +1,5 @@
+<<<<<<< HEAD
+Branch 3 change
+=======
+Develop change 6
+>>>>>>> develop
