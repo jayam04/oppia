@@ -1906,6 +1906,7 @@ export class ExplorationEditor extends BaseUser {
    * draft.
    */
   async createSimpleUnsupportedExploration(): Promise<string> {
+    await this.dismissWelcomeModal(false);
     // Check if element to add interaction is visible (pre-check)
     await this.page.waitForSelector(stateEditSelector, {
       visible: true,
