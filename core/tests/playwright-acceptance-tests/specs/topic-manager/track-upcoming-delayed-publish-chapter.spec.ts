@@ -48,13 +48,12 @@ const publishUptoChaptersDropdownSelector =
 test.describe.configure({mode: 'serial'});
 
 test.describe('Logged-In Learner', function () {
+  test.setTimeout(1200000);
   let curriculumAdmin: CurriculumAdmin & ExplorationEditor & TopicManager;
   let releaseCoordinator: ReleaseCoordinator;
   const chapterIds: string[] = [];
 
-  test.beforeAll(async function ({browser}) {
-    test.setTimeout(6000000);
-
+  test.beforeAll({timeout: 1200000}, async function ({browser}) {
     curriculumAdmin = await UserFactory.createNewUser(
       'curriculumAdm',
       'curriculumAdmin@example.com',
