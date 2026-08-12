@@ -36,6 +36,7 @@ const usernameInputSelector = 'input.e2e-test-username-input';
 const agreeToTermsCheckboxSelector = 'input.e2e-test-agree-to-terms-checkbox';
 const registerButtonSelector = 'button.e2e-test-register-user:not([disabled])';
 const LABEL_FOR_SUBMIT_BUTTON = 'Submit and start contributing';
+const plannedPublicationDateInput = '.e2e-test-planned-publication-date-input';
 
 export class BaseUser {
   readonly page: Page;
@@ -1291,6 +1292,47 @@ export class BaseUser {
     showMessage(
       `Element ${elementDesc} did not stabilize within ${timeout} ms`
     );
+  }
+
+  /**
+   * This function converts a given date string into ISO format (YYYY-MM-DD).
+   */
+  private toISODate(dateString: string): string {
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid date string: ${dateString}`);
+    }
+
+    return date.toISOString().split('T')[0];
+  }
+
+  /**
+   * This function set publication date for chapter.
+   */
+  async setNodePlannedPublicationDate(): Promise<void> {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 3);
+    const dateString = futureDate.toLocaleDateString('en-US');
+    const isoDate = this.toISODate(dateString);
+    await this.page.$eval(
+      plannedPublicationDateInput,
+      (el, value) => {
+        const input = el as HTMLInputElement;
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        )?.set;
+
+        nativeInputValueSetter?.call(input, value);
+
+        input.dispatchEvent(new Event('input', {bubbles: true}));
+        input.dispatchEvent(new Event('change', {bubbles: true}));
+        input.dispatchEvent(new Event('blur', {bubbles: true}));
+      },
+      isoDate
+    );
+    showMessage('Planned publication date is set to: ' + isoDate);
   }
 }
 

@@ -19,6 +19,7 @@
  * TODO(#24785): This has to set after adding the CUJs in v3 docs.
  */
 
+import {test} from '@playwright/test';
 import {UserFactory} from '../../utilities/common/user-factory';
 import testConstants from '../../utilities/common/test-constants';
 import {CurriculumAdmin} from '../../utilities/user/curriculum-admin';
@@ -44,21 +45,25 @@ const mobilePublishStoryButton =
 const publishUptoChaptersDropdownSelector =
   'select.e2e-test-publish-up-to-chapter-dropdown';
 
-describe('Logged-In Learner', function () {
+test.describe.configure({mode: 'serial'});
+
+test.describe('Logged-In Learner', function () {
   let curriculumAdmin: CurriculumAdmin & ExplorationEditor & TopicManager;
   let releaseCoordinator: ReleaseCoordinator;
   const chapterIds: string[] = [];
 
-  beforeAll(async function () {
+  test.beforeAll(async function ({browser}) {
     curriculumAdmin = await UserFactory.createNewUser(
       'curriculumAdm',
       'curriculumAdmin@example.com',
+      browser,
       [ROLES.CURRICULUM_ADMIN]
     );
 
     releaseCoordinator = await UserFactory.createNewUser(
       'releaseAdm',
       'releaseAdm@example.com',
+      browser,
       [ROLES.RELEASE_COORDINATOR]
     );
 
@@ -118,7 +123,7 @@ describe('Logged-In Learner', function () {
     await curriculumAdmin.saveStoryDraft();
   }, 6000000);
 
-  it(
+  test(
     'should should create, track upcoming or delayed publications, and publish chapters.',
     async function () {
       await curriculumAdmin.openStoryEditor(
@@ -265,7 +270,7 @@ describe('Logged-In Learner', function () {
     },
     DEFAULT_SPEC_TIMEOUT_MSECS
   );
-  afterAll(async function () {
+  test.afterAll(async function () {
     await UserFactory.closeAllBrowsers();
   });
 });
