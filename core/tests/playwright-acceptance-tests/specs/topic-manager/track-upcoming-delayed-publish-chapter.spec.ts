@@ -55,15 +55,15 @@ test.describe('Logged-In Learner', function () {
   test.beforeAll(async function ({browser}) {
     test.setTimeout(6000000);
     curriculumAdmin = await UserFactory.createNewUser(
-      'curriculumAdmin',
+      'curriculumAdm',
       'curriculumAdmin@example.com',
       browser,
       [ROLES.CURRICULUM_ADMIN]
     );
 
     releaseCoordinator = await UserFactory.createNewUser(
-      'releaseCoordinator',
-      'releaseCoordinator@example.com',
+      'releaseAdm',
+      'releaseAdm@example.com',
       browser,
       [ROLES.RELEASE_COORDINATOR]
     );

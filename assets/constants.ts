@@ -7987,7 +7987,7 @@ export default {
     }
   },
 
-  "DEV_MODE": false,
+  "DEV_MODE": true,
   "EMULATOR_MODE": true,
   "ASSET_TYPE_AUDIO": "audio",
   "ASSET_TYPE_IMAGE": "image",
@@ -8006,8 +8006,8 @@ export default {
   ],
   "CONTRIBUTOR_CERTIFICATE_WIDTH": 1493,
   "CONTRIBUTOR_CERTIFICATE_HEIGHT": 1313,
-  "BRANCH_NAME": "tm-track-upcoming-delayed-publish-chapter",
-  "SHORT_COMMIT_HASH": "f52f17167c",
+  "BRANCH_NAME": "",
+  "SHORT_COMMIT_HASH": "",
   // Please consult the translation team before adding any entries here.
   // These words improve the quality of automatic voiceovers.
   "LANGUAGE_CODE_TO_MATH_SYMBOL_PRONUNCIATIONS": {
