@@ -103,7 +103,7 @@ test.describe('Topic Manager', function () {
     );
     await topicManager.addChapter('Solving Problems', explorationId);
     await topicManager.saveStoryDraft();
-    await topicManager.expectScreenshotToMatch('storyEditor', __dirname);
+    await topicManager.expectScreenshotToMatch('storyEditor');
 
     // Check if the story is present in the stories list.
     await topicManager.openTopicEditor('Arithmetic Operations');
