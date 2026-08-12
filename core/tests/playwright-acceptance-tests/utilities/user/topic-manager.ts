@@ -1387,7 +1387,7 @@ export class TopicManager extends BaseUser {
         if (title === storyName) {
           await titleElement.click();
           await this.page.waitForNavigation({
-            waitUntil: ['load', 'networkidle0'],
+            waitUntil: 'networkidle',
           });
 
           await this.expectElementToBeVisible(storyEditorContainerSelector);

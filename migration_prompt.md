@@ -49,7 +49,10 @@ Target directory: `core/tests/playwright-acceptance-tests/specs/<suite_folder>/`
    - `beforeEach(...)` -> `test.beforeEach(...)`
    - `afterEach(...)` -> `test.afterEach(...)`
 5. **Pass `browser` Fixture**: In `test.beforeAll(async function ({browser}) { ... })`, update `UserFactory.createNewUser(...)` calls to pass the `browser` fixture argument.
-6. **Keep All Other Code Untouched**: Leave all utility method calls, test steps, arguments, and logic strictly identical to the source Puppeteer spec file.
+6. **Remove `__dirname` from Screenshot Matching Calls**:
+   - In Playwright acceptance tests, `expectScreenshotToMatch` does not take `__dirname` as an argument. Remove `__dirname` from any `expectScreenshotToMatch` calls in the spec file.
+   - Example: `await topicManager.expectScreenshotToMatch('storyEditor', __dirname);` -> `await topicManager.expectScreenshotToMatch('storyEditor');`
+7. **Keep All Other Code Untouched**: Leave all other utility method calls, test steps, arguments, and logic strictly identical to the source Puppeteer spec file.
 
 ---
 
@@ -190,6 +193,7 @@ Execute test runs in sequence using `xvfb-run -a`. **Crucial rule**: After the i
 - [ ] Did you verify ports are free and stop leftover Firebase emulators / servers before running tests?
 - [ ] Did you prefix all test commands with `xvfb-run -a`?
 - [ ] Did you copy spec file FIRST and utility files/methods SECOND?
+- [ ] Did you remove `__dirname` from all `expectScreenshotToMatch` calls in the spec file?
 - [ ] Did you update `core/tests/ci-test-suite-configs/acceptance.json`?
 - [ ] Did you commit changes BEFORE running tests for the first time?
 - [ ] Did you include `--skip_build` on all test retries and subsequent stages?
