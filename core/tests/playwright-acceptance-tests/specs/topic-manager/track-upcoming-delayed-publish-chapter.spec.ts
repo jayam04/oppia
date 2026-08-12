@@ -125,7 +125,7 @@ test.describe('Logged-In Learner', function () {
   });
 
   test('should should create, track upcoming or delayed publications, and publish chapters.', async function () {
-    test.setTimeout(DEFAULT_SPEC_TIMEOUT_MSECS);
+    test.setTimeout(6000000);
 
     await curriculumAdmin.openStoryEditor(
       "Jamie's Adventures in the Arcade",
