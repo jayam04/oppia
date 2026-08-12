@@ -19,6 +19,7 @@
  * TM.3. Create, delete and edit stories and chapters.
  */
 
+import {test} from '@playwright/test';
 import testConstants from '../../utilities/common/test-constants';
 import {UserFactory} from '../../utilities/common/user-factory';
 import {CurriculumAdmin} from '../../utilities/user/curriculum-admin';
@@ -28,17 +29,21 @@ import {TopicManager} from '../../utilities/user/topic-manager';
 const ROLES = testConstants.Roles;
 const DEFAULT_SPEC_TIMEOUT_MSECS = testConstants.DEFAULT_SPEC_TIMEOUT_MSECS;
 
-describe('Topic Manager', function () {
+test.describe.configure({mode: 'serial'});
+
+test.describe('Topic Manager', function () {
   let topicManager: TopicManager & CurriculumAdmin & ExplorationEditor;
   let curriculumAdmin: CurriculumAdmin & ExplorationEditor;
   let explorationId: string;
   let simpleExplorationId: string;
   let unsupportedExplorationId: string;
 
-  beforeAll(async function () {
+  test.beforeAll(async function ({browser}) {
+    test.setTimeout(600_000);
     curriculumAdmin = await UserFactory.createNewUser(
       'curriculumAdm',
       'curriculum_adm@example.com',
+      browser,
       [ROLES.CURRICULUM_ADMIN]
     );
 
@@ -81,12 +86,13 @@ describe('Topic Manager', function () {
     topicManager = await UserFactory.createNewUser(
       'topicManager',
       'topic_manager@example.com',
+      browser,
       [ROLES.TOPIC_MANAGER],
       'Arithmetic Operations'
     );
   }, 600000);
 
-  it('should be able to create and remove a story in a topic', async function () {
+  test('should be able to create and remove a story in a topic', async function () {
     await topicManager.openTopicEditor('Arithmetic Operations');
     await topicManager.addStoryToTopic(
       'The Broken Calculator',
@@ -109,7 +115,7 @@ describe('Topic Manager', function () {
     await topicManager.expectStoriesListToBeEmpty();
   });
 
-  it('should be able to edit and preview the story', async function () {
+  test('should be able to edit and preview the story', async function () {
     await topicManager.addStoryToTopic(
       'The Broken Calculator',
       'the-broken-calculator',
@@ -129,7 +135,7 @@ describe('Topic Manager', function () {
     );
   });
 
-  it('should be able to save chapters with mobile supported explorations', async function () {
+  test('should be able to save chapters with mobile supported explorations', async function () {
     // Revert the story name and add a chapter using the main exploration.
     await topicManager.editStoryDetails(
       'The Broken Calculator',
@@ -199,7 +205,7 @@ describe('Topic Manager', function () {
     await topicManager.discardStoryChanges();
   });
 
-  it(
+  test(
     'should be able to edit and preview the chapter',
     async function () {
       await topicManager.openStoryEditor(
@@ -296,7 +302,7 @@ describe('Topic Manager', function () {
     DEFAULT_SPEC_TIMEOUT_MSECS
   );
 
-  afterAll(async function () {
+  test.afterAll(async function () {
     await UserFactory.closeAllBrowsers();
   });
 });

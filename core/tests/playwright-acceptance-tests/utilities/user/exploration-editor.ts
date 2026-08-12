@@ -1898,6 +1898,67 @@ export class ExplorationEditor extends BaseUser {
     await element.fill(value);
     await expect(element).toHaveValue(value);
   }
+
+  /**
+   * Function for creating an exploration with two cards where one card contains
+   * set input interaction which is not supported in mobile view.
+   * Ends at same page, after adding the unsupported interaction and saving the
+   * draft.
+   */
+  async createSimpleUnsupportedExploration(): Promise<string> {
+    // Check if element to add interaction is visible (pre-check)
+    await this.page.waitForSelector(stateEditSelector, {
+      visible: true,
+    });
+
+    await this.createMinimalExploration(
+      'This is a test Math Exploration',
+      INTERACTION_TYPES.SET_INPUT
+    );
+
+    const lastInteraction = 'Last Card';
+    await this.waitForElementToBeClickable(destinationCardSelector);
+    await this.select(destinationCardSelector, '/');
+    await this.expectElementToBeVisible(addStateInput);
+    await this.typeInInputField(addStateInput, lastInteraction);
+    await this.clickOnElementWithSelector(addNewResponseButton);
+    await this.expectElementToBeVisible(correctAnswerInTheGroupSelector);
+    await this.clickOnElementWithSelector(correctAnswerInTheGroupSelector);
+
+    await this.editDefaultResponseFeedbackInExplorationEditorPage(
+      'Wrong Answer. Please try again'
+    );
+    await this.navigateToCard(lastInteraction);
+    await this.createMinimalExploration(
+      'This is last card',
+      INTERACTION_TYPES.END_EXPLORATION
+    );
+
+    await this.saveExplorationDraft();
+    const explorationId = await this.publishExplorationWithMetadata(
+      'Simple Math Exploration',
+      'This is goal here',
+      'Mathematics'
+    );
+
+    // Check if publish button is disabled (post-check)
+    const publishButton = await this.page.$(saveChangesButton);
+    const isDisabled = await this.page.evaluate(
+      el => el.disabled,
+      publishButton
+    );
+
+    if (isDisabled) {
+      showMessage('Publish Button is disabled, as expected');
+    } else {
+      showMessage(
+        'Publish Button is enabled and clickable, expected to be disabled'
+      );
+      throw new Error('Publish Button is enabled and clickable');
+    }
+
+    return explorationId;
+  }
 }
 
 export const ExplorationEditorFactory = (page: Page): ExplorationEditor => {

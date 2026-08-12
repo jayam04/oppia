@@ -602,8 +602,8 @@
     },
     {
       "name": "topic-manager/create-delete-and-edit-the-stories-and-chapters",
-      "module": "core/tests/puppeteer-acceptance-tests/specs/topic-manager/create-delete-and-edit-the-stories-and-chapters.spec.ts",
-      "framework": "puppeteer"
+      "module": "core/tests/playwright-acceptance-tests/specs/topic-manager/create-delete-and-edit-the-stories-and-chapters.spec.ts",
+      "framework": "playwright"
     },
     {
       "name": "topic-manager/create-and-edit-questions-in-skill-dashboard",
