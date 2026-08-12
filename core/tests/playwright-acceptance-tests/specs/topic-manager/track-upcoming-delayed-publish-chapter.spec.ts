@@ -53,6 +53,8 @@ test.describe('Logged-In Learner', function () {
   const chapterIds: string[] = [];
 
   test.beforeAll(async function ({browser}) {
+    test.setTimeout(6000000);
+
     curriculumAdmin = await UserFactory.createNewUser(
       'curriculumAdm',
       'curriculumAdmin@example.com',
@@ -121,7 +123,7 @@ test.describe('Logged-In Learner', function () {
     }
 
     await curriculumAdmin.saveStoryDraft();
-  }, 6000000);
+  });
 
   test(
     'should should create, track upcoming or delayed publications, and publish chapters.',
